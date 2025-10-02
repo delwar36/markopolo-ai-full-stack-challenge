@@ -85,6 +85,8 @@ export interface CampaignPayload {
     expectedEngagement: number;
     expectedConversion: number;
   };
+  isStreaming?: boolean;
+  streamingSections?: string[];
 }
 
 export interface ConnectionStatus {

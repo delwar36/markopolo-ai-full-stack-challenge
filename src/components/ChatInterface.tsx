@@ -81,7 +81,9 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     tempDataSources,
     tempChannels,
     addMessage,
+    updateMessage,
     setCampaignOutput,
+    updateCampaignOutput,
     connectDataSource,
     removeDataSource,
     selectChannel,
@@ -116,6 +118,81 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
+  };
+
+  // Helper function to simulate streaming text
+  const streamText = async (chatId: string, messageId: string, fullText: string) => {
+    // Split text into chunks for more realistic streaming
+    const chunks = fullText.split(/(?<=[.!?])\s+/).filter(chunk => chunk.trim());
+    let currentText = '';
+    
+    for (let i = 0; i < chunks.length; i++) {
+      currentText += (i > 0 ? ' ' : '') + chunks[i];
+      
+      // Update the message with current text
+      updateMessage(chatId, messageId, {
+        content: currentText,
+        isStreaming: i < chunks.length - 1
+      });
+      
+      // Scroll to bottom to follow the streaming text
+      scrollToBottom();
+      
+      // Wait between chunks (longer pause for sentences, shorter for phrases)
+      const delay = chunks[i].endsWith('.') || chunks[i].endsWith('!') || chunks[i].endsWith('?') 
+        ? Math.random() * 300 + 200  // 200-500ms for sentence endings
+        : Math.random() * 150 + 100; // 100-250ms for regular chunks
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    // Mark streaming as complete
+    updateMessage(chatId, messageId, {
+      isStreaming: false
+    });
+  };
+
+  // Helper function to stream campaign generation
+  const streamCampaignGeneration = async (chatId: string, dataSources: DataSource[], channels: Channel[]) => {
+    // Create initial campaign structure
+    const campaign = await generateCampaignPayload(dataSources, channels);
+    
+    // Set initial campaign with streaming flag
+    setCampaignOutput(chatId, {
+      ...campaign,
+      isStreaming: true,
+      streamingSections: []
+    });
+
+    // Define streaming sections with realistic delays
+    const sections = [
+      { name: 'audience', delay: 800 },
+      { name: 'timing', delay: 600 },
+      { name: 'content', delay: 1000 },
+      { name: 'budget', delay: 700 },
+      { name: 'metrics', delay: 900 }
+    ];
+
+    // Stream each section progressively
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
+      
+      // Wait for the delay
+      await new Promise(resolve => setTimeout(resolve, section.delay));
+      
+      // Add section to streaming sections
+      updateCampaignOutput(chatId, {
+        streamingSections: [...(campaign.streamingSections || []), section.name]
+      });
+      
+      // Scroll to bottom to follow the campaign generation
+      scrollToBottom();
+    }
+
+    // Mark streaming as complete
+    updateCampaignOutput(chatId, {
+      isStreaming: false
+    });
   };
 
   useEffect(() => {
@@ -182,38 +259,54 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
       connectedDataSources.length > 0 && selectedChannels.length > 0;
 
     if (shouldGenerateCampaign) {
-      // Simulate AI response
-      setTimeout(async () => {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content:
-            "Generating your targeted campaign based on your connected data sources and selected channels...",
-          role: "assistant",
-          timestamp: new Date(),
-        };
-        addMessage(chatId, assistantMessage);
+      // Create initial assistant message
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "",
+        role: "assistant",
+        timestamp: new Date(),
+        isStreaming: true,
+      };
+      addMessage(chatId, assistantMessage);
 
-        // Actually generate campaign
-        const campaign = await generateCampaignPayload(
-          connectedDataSources,
-          selectedChannels
-        );
-        setCampaignOutput(chatId, campaign);
-        setIsLoading(false);
-      }, 1000);
+      // Start streaming response for campaign generation
+      const campaignResponses = [
+        "Perfect! I can see you've connected your data sources and selected your channels. Now I'm generating your targeted campaign.",
+        "I'm analyzing your audience segments from your connected data sources to understand their behavior patterns and preferences.",
+        "Based on your selected channels, I'm optimizing the content and timing for each platform to maximize engagement.",
+        "I'm setting up the campaign parameters including budget allocation, frequency caps, and performance tracking.",
+        "Almost done! I'm finalizing the campaign strategy with personalized messaging and expected performance metrics."
+      ];
+      
+      const fullResponse = campaignResponses.join(" ");
+      await streamText(chatId, assistantMessage.id, fullResponse);
+
+      // Stream campaign generation after message streaming is complete
+      await streamCampaignGeneration(chatId, connectedDataSources, selectedChannels);
+      setIsLoading(false);
     } else {
-      // Regular AI response
-      setTimeout(() => {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content:
-            "I'll help you create a targeted campaign. Please connect your data sources and select channels to get started.",
-          role: "assistant",
-          timestamp: new Date(),
-        };
-        addMessage(chatId, assistantMessage);
-        setIsLoading(false);
-      }, 1000);
+      // Create initial assistant message
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "",
+        role: "assistant",
+        timestamp: new Date(),
+        isStreaming: true,
+      };
+      addMessage(chatId, assistantMessage);
+
+      // Start streaming response with more engaging content
+      const responses = [
+        "I'll help you create a targeted campaign that drives real results. Let me guide you through the process step by step.",
+        "First, you'll need to connect your data sources like Google Tag Manager, Facebook Pixel, or Google Ads to understand your audience behavior.",
+        "Then, select the channels where you want to reach your audience - Email, SMS, Push Notifications, or WhatsApp.",
+        "Once you've connected your data and chosen your channels, I'll analyze your audience segments and generate a comprehensive campaign strategy tailored to your specific needs.",
+        "This will include personalized content, optimal timing, budget allocation, and expected performance metrics for each channel."
+      ];
+      
+      const fullResponse = responses.join(" ");
+      await streamText(chatId, assistantMessage.id, fullResponse);
+      setIsLoading(false);
     }
   };
 

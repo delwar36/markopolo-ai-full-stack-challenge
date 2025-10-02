@@ -26,7 +26,9 @@ interface ChatContextType {
   updateChat: (chatId: string, updates: Partial<Chat>) => void;
   deleteChat: (chatId: string) => void;
   addMessage: (chatId: string, message: Message) => void;
+  updateMessage: (chatId: string, messageId: string, updates: Partial<Message>) => void;
   setCampaignOutput: (chatId: string, campaign: CampaignPayload) => void;
+  updateCampaignOutput: (chatId: string, updates: Partial<CampaignPayload>) => void;
   connectDataSource: (chatId: string, dataSource: DataSource, config?: DataSourceConfig) => void;
   removeDataSource: (chatId: string, dataSource: DataSource) => void;
   selectChannel: (chatId: string, channel: Channel, config?: ChannelConfig) => void;
@@ -158,10 +160,40 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const updateMessage = (chatId: string, messageId: string, updates: Partial<Message>) => {
+    setChats(prev => prev.map(chat => {
+      if (chat.id === chatId) {
+        const updatedMessages = chat.messages.map(message => 
+          message.id === messageId 
+            ? { ...message, ...updates }
+            : message
+        );
+        return {
+          ...chat,
+          messages: updatedMessages,
+          updatedAt: new Date(),
+        };
+      }
+      return chat;
+    }));
+  };
+
   const setCampaignOutput = (chatId: string, campaign: CampaignPayload) => {
     setChats(prev => prev.map(chat => 
       chat.id === chatId 
         ? { ...chat, campaignOutput: campaign, updatedAt: new Date() }
+        : chat
+    ));
+  };
+
+  const updateCampaignOutput = (chatId: string, updates: Partial<CampaignPayload>) => {
+    setChats(prev => prev.map(chat => 
+      chat.id === chatId && chat.campaignOutput
+        ? { 
+            ...chat, 
+            campaignOutput: { ...chat.campaignOutput, ...updates },
+            updatedAt: new Date() 
+          }
         : chat
     ));
   };
@@ -268,7 +300,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         updateChat,
         deleteChat,
         addMessage,
+        updateMessage,
         setCampaignOutput,
+        updateCampaignOutput,
         connectDataSource,
         removeDataSource,
         selectChannel,

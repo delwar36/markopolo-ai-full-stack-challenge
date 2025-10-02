@@ -81,44 +81,78 @@ export default function CampaignMessage({ campaign }: CampaignMessageProps) {
   };
 
   const formatCampaignAsMarkdown = (campaign: CampaignPayload) => {
-    return `## 🎯 Campaign Generated Successfully!
-
-### 📊 Campaign Summary
+    const sections = [];
+    const streamingSections = campaign.streamingSections || [];
+    
+    sections.push(`## 🎯 Campaign Generated Successfully!`);
+    
+    // Always show summary
+    sections.push(`### 📊 Campaign Summary
 - **Name**: ${campaign.name}
 - **Channels**: ${campaign.channels.join(', ')}
 - **Data Sources**: ${campaign.dataSources.join(', ')}
-- **Expected Reach**: ${campaign.metrics.expectedReach.toLocaleString()}
+- **Expected Reach**: ${campaign.metrics.expectedReach.toLocaleString()}`);
 
-### 👥 Audience Targeting
+    // Show sections based on streaming progress
+    if (streamingSections.includes('audience') || !campaign.isStreaming) {
+      sections.push(`### 👥 Audience Targeting
 - **Segments**: ${campaign.audience.segments.join(', ')}
 - **Demographics**: ${Object.entries(campaign.audience.demographics).map(([key, value]) => `${key}: ${value}`).join(', ')}
-- **Behaviors**: ${Object.entries(campaign.audience.behaviors).map(([key, value]) => `${key}: ${value}`).join(', ')}
+- **Behaviors**: ${Object.entries(campaign.audience.behaviors).map(([key, value]) => `${key}: ${value}`).join(', ')}`);
+    }
 
-### ⏰ Timing Strategy
+    if (streamingSections.includes('timing') || !campaign.isStreaming) {
+      sections.push(`### ⏰ Timing Strategy
 - **Duration**: ${new Date(campaign.timing.startDate).toLocaleDateString()} - ${new Date(campaign.timing.endDate).toLocaleDateString()}
 - **Frequency**: ${campaign.timing.frequency}
-- **Timezone**: ${campaign.timing.timezone}
+- **Timezone**: ${campaign.timing.timezone}`);
+    }
 
-### 📝 Content Strategy
+    if (streamingSections.includes('content') || !campaign.isStreaming) {
+      sections.push(`### 📝 Content Strategy
 ${campaign.content.subject ? `- **Subject**: ${campaign.content.subject}` : ''}
 - **Message**: ${campaign.content.body}
-${campaign.content.cta ? `- **Call-to-Action**: ${campaign.content.cta}` : ''}
+${campaign.content.cta ? `- **Call-to-Action**: ${campaign.content.cta}` : ''}`);
+    }
 
-### 💰 Budget Allocation
+    if (streamingSections.includes('budget') || !campaign.isStreaming) {
+      sections.push(`### 💰 Budget Allocation
 - **Total Budget**: $${campaign.budget?.total.toLocaleString() || 'N/A'}
-${campaign.budget?.perChannel ? Object.entries(campaign.budget.perChannel).map(([channel, amount]) => `- **${channel}**: $${amount.toLocaleString()}`).join('\n') : ''}
+${campaign.budget?.perChannel ? Object.entries(campaign.budget.perChannel).map(([channel, amount]) => `- **${channel}**: $${amount.toLocaleString()}`).join('\n') : ''}`);
+    }
 
-### 📈 Expected Performance
+    if (streamingSections.includes('metrics') || !campaign.isStreaming) {
+      sections.push(`### 📈 Expected Performance
 - **Reach**: ${campaign.metrics.expectedReach.toLocaleString()}
 - **Engagement Rate**: ${(campaign.metrics.expectedEngagement * 100).toFixed(1)}%
-- **Conversion Rate**: ${(campaign.metrics.expectedConversion * 100).toFixed(1)}%
+- **Conversion Rate**: ${(campaign.metrics.expectedConversion * 100).toFixed(1)}%`);
+    }
 
----
+    // Add loading indicator if still streaming
+    if (campaign.isStreaming) {
+      const pendingTasks = [];
+      if (!streamingSections.includes('audience')) pendingTasks.push('- 🔍 Analyzing audience segments...');
+      if (!streamingSections.includes('timing')) pendingTasks.push('- ⏱️ Optimizing timing strategy...');
+      if (!streamingSections.includes('content')) pendingTasks.push('- ✍️ Crafting personalized content...');
+      if (!streamingSections.includes('budget')) pendingTasks.push('- 💰 Calculating budget allocation...');
+      if (!streamingSections.includes('metrics')) pendingTasks.push('- 📊 Computing performance metrics...');
+      
+      if (pendingTasks.length > 0) {
+        sections.push(`### 🔄 Generating...
+${pendingTasks.join('\n')}`);
+      }
+    }
 
+    // Only show JSON when streaming is complete
+    if (!campaign.isStreaming) {
+      sections.push(`---
 ### 🔧 Raw JSON Payload
 \`\`\`json
 ${JSON.stringify(campaign, null, 2)}
-\`\`\``;
+\`\`\``);
+    }
+
+    return sections.join('\n\n');
   };
 
   const getJsonPreview = (campaign: CampaignPayload) => {
@@ -134,12 +168,18 @@ ${JSON.stringify(campaign, null, 2)}
           <div className="flex items-center space-x-2">
             <span className="text-2xl">🤖</span>
             <span className="font-semibold text-gray-900 dark:text-white">Campaign Generator</span>
+            {campaign.isStreaming && (
+              <div className="flex items-center space-x-1 ml-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Generating...</span>
+              </div>
+            )}
           </div>
           
           {/* Run Campaign Button */}
           <button
             onClick={handleRunCampaign}
-            disabled={isRunning}
+            disabled={isRunning || campaign.isStreaming}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-500 text-white rounded-lg transition-colors font-medium text-sm"
           >
             {isRunning ? (
