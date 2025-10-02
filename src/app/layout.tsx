@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Markopolo Chats",
+  title: "Markopolo AI",
   description: "AI-powered multi-channel marketing campaign generator",
 };
 
