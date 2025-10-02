@@ -37,7 +37,9 @@ export default function CampaignMessage({ campaign }: CampaignMessageProps) {
     }
   };
 
-  const handleExpand = () => {
+  const handleExpand = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     setIsExpanded(!isExpanded);
   };
 
@@ -244,7 +246,7 @@ ${JSON.stringify(campaign, null, 2)}
                               {copied ? 'Copied!' : 'Copy'}
                             </button>
                             <button
-                              onClick={handleExpand}
+                              onClick={(e) => handleExpand(e)}
                               className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-xs font-medium transition-colors text-gray-200"
                             >
                               {isExpanded ? 'Collapse' : 'Expand'}

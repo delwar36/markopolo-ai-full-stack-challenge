@@ -21,6 +21,12 @@ export default function CampaignOutput({ campaign }: CampaignOutputProps) {
     }
   };
 
+  const handleExpand = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
+
   return (
     <div className="bg-gray-900 text-white rounded-xl p-6 shadow-lg">
       <div className="flex items-center justify-between mb-6">
@@ -33,7 +39,7 @@ export default function CampaignOutput({ campaign }: CampaignOutputProps) {
             {copied ? 'Copied!' : 'Copy JSON'}
           </button>
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={handleExpand}
             className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors"
           >
             {isExpanded ? 'Collapse' : 'Expand'}
