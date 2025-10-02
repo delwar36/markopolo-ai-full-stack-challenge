@@ -555,8 +555,8 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                   </div>
 
                   {/* Data Sources and Channels Selection */}
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <div className="flex-1 max-w-xs">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <div className="w-full sm:flex-1 sm:max-w-xs">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">Connect Data Sources</h3>
                       <div className="space-y-2">
                         {availableDataSources.slice(0, 3).map((source) => {
@@ -565,7 +565,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                             <button
                               key={source.id}
                               onClick={() => isSelected ? handleDataSourceRemove(source) : handleEmptyDataSourceClick(source)}
-                              className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left${isSelected ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left'}`}
+                              className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left ${isSelected ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left'}`}
                             >
                               <span className="text-xl flex-shrink-0">{source.icon}</span>
                               <div className="flex-1 min-w-0">
@@ -587,7 +587,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                       </div>
                     </div>
 
-                    <div className="flex-1 max-w-xs">
+                    <div className="w-full sm:flex-1 sm:max-w-xs">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">Select Channels</h3>
                       <div className="space-y-2">
                         {availableChannels.slice(0, 4).map((channel) => {
