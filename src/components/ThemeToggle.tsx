@@ -10,16 +10,16 @@ export default function ThemeToggle() {
   };
 
   return (
-    <button
-      onClick={handleToggle}
-      className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border border-gray-300 dark:border-gray-600 flex items-center justify-center"
-      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-      title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-    >
+        <button
+          onClick={handleToggle}
+          className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border border-gray-300 dark:border-gray-600 flex items-center justify-center"
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
       <div className="flex items-center space-x-1">
         {theme === 'light' ? (
           <svg
-            className="w-5 h-5 text-gray-600 dark:text-gray-300"
+              className="w-4 h-4 text-gray-600 dark:text-gray-300"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -33,7 +33,7 @@ export default function ThemeToggle() {
           </svg>
         ) : (
           <svg
-            className="w-5 h-5 text-gray-600 dark:text-gray-300"
+              className="w-4 h-4 text-gray-600 dark:text-gray-300"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

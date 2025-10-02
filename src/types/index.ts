@@ -27,6 +27,33 @@ export interface Channel {
   enabled: boolean;
 }
 
+export interface DataSourceConfig {
+  containerId?: string;
+  websiteUrl?: string;
+  pixelId?: string;
+  accessToken?: string;
+  customerId?: string;
+  conversionId?: string;
+  storeUrl?: string;
+  apiKey?: string;
+  apiSecret?: string;
+  url?: string;
+}
+
+export interface ChannelConfig {
+  provider?: string;
+  apiKey?: string;
+  fromEmail?: string;
+  accountSid?: string;
+  authToken?: string;
+  accountId?: string;
+  phoneNumberId?: string;
+  platform?: string;
+  serverKey?: string;
+  accessToken?: string;
+  url?: string;
+}
+
 export interface CampaignPayload {
   id: string;
   name: string;

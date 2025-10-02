@@ -1,9 +1,11 @@
 'use client';
 
-import { DataSource } from '@/types';
+import { useState } from 'react';
+import { DataSource, DataSourceConfig } from '@/types';
+import DataSourceConfigModal from './DataSourceConfigModal';
 
 interface DataSourceSelectorProps {
-  onConnect: (dataSource: DataSource) => void;
+  onConnect: (dataSource: DataSource, config?: DataSourceConfig) => void;
   connectedSources: DataSource[];
 }
 
@@ -32,9 +34,35 @@ const availableDataSources: DataSource[] = [
 ];
 
 export default function DataSourceSelector({ onConnect, connectedSources }: DataSourceSelectorProps) {
+  const [selectedDataSource, setSelectedDataSource] = useState<DataSource | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const getDataSourceStatus = (id: string) => {
     const connected = connectedSources.find(ds => ds.id === id);
     return connected?.connected || false;
+  };
+
+  const handleDataSourceClick = (dataSource: DataSource) => {
+    const isConnected = getDataSourceStatus(dataSource.id);
+    if (isConnected) {
+      // If already connected, just connect again (could be for reconfiguration)
+      onConnect(dataSource);
+    } else {
+      // If not connected, open configuration modal
+      setSelectedDataSource(dataSource);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleModalConnect = (dataSource: DataSource, config: DataSourceConfig) => {
+    onConnect(dataSource, config);
+    setIsModalOpen(false);
+    setSelectedDataSource(null);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedDataSource(null);
   };
 
   return (
@@ -52,7 +80,7 @@ export default function DataSourceSelector({ onConnect, connectedSources }: Data
                   ? 'border-green-500 bg-green-50 dark:bg-green-900/20 shadow-sm'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
               }`}
-              onClick={() => onConnect(dataSource)}
+              onClick={() => handleDataSourceClick(dataSource)}
             >
               <div className="flex items-start space-x-4">
                 <span className="text-2xl flex-shrink-0">{dataSource.icon}</span>
@@ -75,6 +103,14 @@ export default function DataSourceSelector({ onConnect, connectedSources }: Data
           );
         })}
       </div>
+
+      {/* Configuration Modal */}
+      <DataSourceConfigModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        dataSource={selectedDataSource}
+        onConnect={handleModalConnect}
+      />
     </div>
   );
 }

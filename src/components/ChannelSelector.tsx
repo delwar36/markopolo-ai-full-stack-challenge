@@ -1,9 +1,11 @@
 'use client';
 
-import { Channel } from '@/types';
+import { useState } from 'react';
+import { Channel, ChannelConfig } from '@/types';
+import ChannelConfigModal from './ChannelConfigModal';
 
 interface ChannelSelectorProps {
-  onSelect: (channel: Channel) => void;
+  onSelect: (channel: Channel, config?: ChannelConfig) => void;
   selectedChannels: Channel[];
 }
 
@@ -39,8 +41,34 @@ const availableChannels: Channel[] = [
 ];
 
 export default function ChannelSelector({ onSelect, selectedChannels }: ChannelSelectorProps) {
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const isChannelSelected = (id: string) => {
     return selectedChannels.some(ch => ch.id === id);
+  };
+
+  const handleChannelClick = (channel: Channel) => {
+    const isSelected = isChannelSelected(channel.id);
+    if (isSelected) {
+      // If already selected, just select again (could be for reconfiguration)
+      onSelect(channel);
+    } else {
+      // If not selected, open configuration modal
+      setSelectedChannel(channel);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleModalSelect = (channel: Channel, config: ChannelConfig) => {
+    onSelect(channel, config);
+    setIsModalOpen(false);
+    setSelectedChannel(null);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedChannel(null);
   };
 
   return (
@@ -58,7 +86,7 @@ export default function ChannelSelector({ onSelect, selectedChannels }: ChannelS
                   ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-sm'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
               }`}
-              onClick={() => onSelect(channel)}
+              onClick={() => handleChannelClick(channel)}
             >
               <div className="flex items-start space-x-4">
                 <span className="text-2xl flex-shrink-0">{channel.icon}</span>
@@ -81,6 +109,14 @@ export default function ChannelSelector({ onSelect, selectedChannels }: ChannelS
           );
         })}
       </div>
+
+      {/* Configuration Modal */}
+      <ChannelConfigModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        channel={selectedChannel}
+        onSelect={handleModalSelect}
+      />
     </div>
   );
 }
