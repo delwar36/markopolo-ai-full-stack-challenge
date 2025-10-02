@@ -555,7 +555,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                   </div>
 
                   {/* Data Sources and Channels Selection */}
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center sm:items-start">
                     <div className="w-full sm:flex-1 sm:max-w-xs">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">Connect Data Sources</h3>
                       <div className="space-y-2">
