@@ -131,7 +131,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                       </span>
                       
                       {/* Message Count */}
-                      {chat.messages.length > 0 && (
+                      {chat.messages && chat.messages.length > 0 && (
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
                           currentChatId === chat.id
                             ? 'bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200'

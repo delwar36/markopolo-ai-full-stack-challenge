@@ -18,7 +18,9 @@ interface ChatContextType {
   chats: Chat[];
   currentChatId: string | null;
   currentChat: Chat | null;
-  createNewChat: () => string;
+  tempDataSources: DataSource[];
+  tempChannels: Channel[];
+  createNewChat: (chat?: Chat | null) => string;
   switchToChat: (chatId: string) => void;
   updateChat: (chatId: string, updates: Partial<Chat>) => void;
   deleteChat: (chatId: string) => void;
@@ -28,6 +30,11 @@ interface ChatContextType {
   removeDataSource: (chatId: string, dataSource: DataSource) => void;
   selectChannel: (chatId: string, channel: Channel, config?: ChannelConfig) => void;
   removeChannel: (chatId: string, channel: Channel) => void;
+  addTempDataSource: (dataSource: DataSource, config?: DataSourceConfig) => void;
+  removeTempDataSource: (dataSource: DataSource) => void;
+  addTempChannel: (channel: Channel, config?: ChannelConfig) => void;
+  removeTempChannel: (channel: Channel) => void;
+  clearTempSelections: () => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -35,6 +42,8 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [tempDataSources, setTempDataSources] = useState<DataSource[]>([]);
+  const [tempChannels, setTempChannels] = useState<Channel[]>([]);
   const [mounted, setMounted] = useState(false);
 
   // Load chats from localStorage on mount
@@ -42,14 +51,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     const savedChats = localStorage.getItem('markopolo-chats');
     if (savedChats) {
       try {
-        const parsedChats = JSON.parse(savedChats).map((chat: Chat & { createdAt: string; updatedAt: string; messages: (Message & { timestamp: string })[] }) => ({
+        const parsedChats = JSON.parse(savedChats).map((chat: Chat & { createdAt: string; updatedAt: string; messages?: (Message & { timestamp: string })[] }) => ({
           ...chat,
           createdAt: new Date(chat.createdAt),
           updatedAt: new Date(chat.updatedAt),
-          messages: chat.messages.map((message: Message & { timestamp: string }) => ({
+          messages: chat.messages ? chat.messages.map((message: Message & { timestamp: string }) => ({
             ...message,
             timestamp: new Date(message.timestamp),
-          })),
+          })) : [],
         }));
         setChats(parsedChats);
         
@@ -87,19 +96,22 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return 'New Chat';
   };
 
-  const createNewChat = (): string => {
-    const newChat: Chat = {
+  const createNewChat = (chat?: Chat | null): string => {
+    const newChat: Chat = chat || {
       id: generateChatId(),
       title: 'New Chat',
       createdAt: new Date(),
       updatedAt: new Date(),
       messages: [],
-      connectedDataSources: [],
-      selectedChannels: [],
+      connectedDataSources: tempDataSources,
+      selectedChannels: tempChannels,
     };
 
     setChats(prev => [newChat, ...prev]);
     setCurrentChatId(newChat.id);
+    // Clear temp selections after creating chat
+    setTempDataSources([]);
+    setTempChannels([]);
     return newChat.id;
   };
 
@@ -212,6 +224,33 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     ));
   };
 
+  const addTempDataSource = (dataSource: DataSource, config?: DataSourceConfig) => {
+    const isAlreadyAdded = tempDataSources.some(ds => ds.id === dataSource.id);
+    if (!isAlreadyAdded) {
+      setTempDataSources(prev => [...prev, { ...dataSource, connected: true, connectionDetails: config }]);
+    }
+  };
+
+  const removeTempDataSource = (dataSource: DataSource) => {
+    setTempDataSources(prev => prev.filter(ds => ds.id !== dataSource.id));
+  };
+
+  const addTempChannel = (channel: Channel, config?: ChannelConfig) => {
+    const isAlreadyAdded = tempChannels.some(ch => ch.id === channel.id);
+    if (!isAlreadyAdded) {
+      setTempChannels(prev => [...prev, { ...channel, enabled: true }]);
+    }
+  };
+
+  const removeTempChannel = (channel: Channel) => {
+    setTempChannels(prev => prev.filter(ch => ch.id !== channel.id));
+  };
+
+  const clearTempSelections = () => {
+    setTempDataSources([]);
+    setTempChannels([]);
+  };
+
   const currentChat = chats.find(chat => chat.id === currentChatId) || null;
 
   if (!mounted) {
@@ -224,6 +263,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         chats,
         currentChatId,
         currentChat,
+        tempDataSources,
+        tempChannels,
         createNewChat,
         switchToChat,
         updateChat,
@@ -234,6 +275,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         removeDataSource,
         selectChannel,
         removeChannel,
+        addTempDataSource,
+        removeTempDataSource,
+        addTempChannel,
+        removeTempChannel,
+        clearTempSelections,
       }}
     >
       {children}
