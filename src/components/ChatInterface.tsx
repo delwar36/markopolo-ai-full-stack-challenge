@@ -121,7 +121,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
           timestamp: new Date(),
         };
         addMessage(currentChat.id, assistantMessage);
-        
+
         // Generate campaign
         const campaign = await generateCampaignPayload(connectedDataSources, selectedChannels);
         setCampaignOutput(currentChat.id, campaign);
@@ -200,12 +200,12 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            
+
             <div>
               <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{currentChat.title}</h1>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-3">
             <ThemeToggle />
           </div>
@@ -222,15 +222,15 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
               <p className="text-lg lg:text-xl text-gray-600 dark:text-gray-300">Connect your data sources and channels to create targeted campaigns</p>
             </div>
           )}
-          
+
           {messages.map((message) => (
             <MessageBubble key={message.id} message={message} />
           ))}
-          
+
           {campaignOutput && (
             <CampaignMessage campaign={campaignOutput} />
           )}
-          
+
           {isLoading && (
             <div className="flex justify-start mb-4">
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 max-w-xs shadow-sm">
@@ -242,7 +242,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
@@ -252,7 +252,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
           {/* Input with Chips */}
           <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4 mb-4">
             <div className="flex-1 relative">
-              <div className="flex flex-wrap items-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+              <div className={`flex flex-wrap items-center gap-2 ${(connectedDataSources.length > 0 && selectedChannels.length > 0) ? 'p-1.5' : 'p-3'} border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent`}>
                 {/* Chips */}
                 {connectedDataSources.map((dataSource) => (
                   <Chip
@@ -272,7 +272,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                     onRemove={() => handleChannelRemove(channel)}
                   />
                 ))}
-                
+
                 {/* Input Field */}
                 <input
                   type="text"
@@ -294,14 +294,13 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
             <button
               onClick={handleSendMessage}
               disabled={isLoading || !inputValue.trim()}
-              className={`px-4 lg:px-6 py-2 text-white rounded-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm ${
-                connectedDataSources.length > 0 && selectedChannels.length > 0
-                  ? 'bg-purple-600 hover:bg-purple-700'
-                  : 'bg-blue-600 hover:bg-blue-700'
-              }`}
+              className={`px-4 lg:px-6 py-2 text-white rounded-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm ${connectedDataSources.length > 0 && selectedChannels.length > 0
+                ? 'bg-purple-600 hover:bg-purple-700'
+                : 'bg-blue-600 hover:bg-blue-700'
+                }`}
             >
-              {isLoading 
-                ? 'Generating...' 
+              {isLoading
+                ? 'Generating...'
                 : connectedDataSources.length > 0 && selectedChannels.length > 0
                   ? 'Generate Campaign'
                   : 'Send'
@@ -310,7 +309,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
           </div>
 
           {/* Add Data Sources and Channels */}
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <DropdownSelector
               type="dataSource"
               options={availableDataSources}

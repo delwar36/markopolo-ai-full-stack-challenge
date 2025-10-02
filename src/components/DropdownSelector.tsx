@@ -13,12 +13,12 @@ interface DropdownSelectorProps {
   onRemove: (item: DataSource | Channel) => void;
 }
 
-export default function DropdownSelector({ 
-  type, 
-  options, 
-  selectedItems, 
-  onSelect, 
-  onRemove 
+export default function DropdownSelector({
+  type,
+  options,
+  selectedItems,
+  onSelect,
+  onRemove
 }: DropdownSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<DataSource | Channel | null>(null);
@@ -44,7 +44,7 @@ export default function DropdownSelector({
 
   const handleOptionClick = (option: DataSource | Channel) => {
     const isSelected = selectedItems.some(item => item.id === option.id);
-    
+
     if (isSelected) {
       // If already selected, remove it
       onRemove(option);
@@ -86,7 +86,7 @@ export default function DropdownSelector({
       {/* Add Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`${selectedItems.length> 0? 'bg-gray-100 dark:bg-gray-700':''} flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600`}
+        className={`${selectedItems.length > 0 ? type === 'dataSource' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700' : 'bg-transparent'} flex items-center space-x-2 px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300  rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600`}
       >
         <span className="text-lg">{getIcon()}</span>
         <span>{getButtonText()}</span>
@@ -119,11 +119,10 @@ export default function DropdownSelector({
                   <div
                     key={option.id}
                     onClick={() => handleOptionClick(option)}
-                    className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      isSelected
-                        ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700'
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
+                    className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${isSelected
+                      ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700'
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
                   >
                     <span className="text-xl flex-shrink-0">{option.icon}</span>
                     <div className="flex-1 min-w-0">
@@ -156,7 +155,7 @@ export default function DropdownSelector({
           onConnect={handleModalConfirm}
         />
       )}
-      
+
       {type === 'channel' && selectedOption && (
         <ChannelConfigModal
           isOpen={isModalOpen}

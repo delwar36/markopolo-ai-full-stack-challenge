@@ -14,7 +14,7 @@ export default function Chip({ label, icon, onRemove, variant = 'dataSource' }: 
   };
 
   return (
-    <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border ${variantStyles[variant]}`}>
+    <div className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium border ${variantStyles[variant]}`}>
       <span className="mr-2 text-base">{icon}</span>
       <span className="mr-2">{label}</span>
       <button
