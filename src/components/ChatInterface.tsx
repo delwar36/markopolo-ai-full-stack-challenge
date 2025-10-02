@@ -6,14 +6,17 @@ import MessageBubble from './MessageBubble';
 import DataSourceSelector from './DataSourceSelector';
 import ChannelSelector from './ChannelSelector';
 import CampaignMessage from './CampaignMessage';
+import ThemeToggle from './ThemeToggle';
+import { useTheme } from '@/contexts/ThemeContext';
 import { generateCampaignPayload } from '@/utils/campaignGenerator';
 
 export default function ChatInterface() {
+  const { theme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showDataSources, setShowDataSources] = useState(false);
-  const [showChannels, setShowChannels] = useState(false);
+  const [showDataSources, setShowDataSources] = useState(true);
+  const [showChannels, setShowChannels] = useState(true);
   const [campaignOutput, setCampaignOutput] = useState<CampaignPayload | null>(null);
   const [connectedDataSources, setConnectedDataSources] = useState<DataSource[]>([]);
   const [selectedChannels, setSelectedChannels] = useState<Channel[]>([]);
@@ -104,12 +107,12 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-5 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-5 shadow-sm">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Markopolo Chats</h1>
-          <div className="flex space-x-3">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Markopolo Chats</h1>
+          <div className="flex items-center space-x-3">
             <button
               onClick={() => setShowDataSources(!showDataSources)}
               className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
@@ -129,6 +132,7 @@ export default function ChatInterface() {
             >
               {isLoading ? 'Generating...' : 'Generate Campaign'}
             </button>
+            <ThemeToggle />
           </div>
         </div>
       </div>
@@ -136,7 +140,7 @@ export default function ChatInterface() {
       {/* Sidebar */}
       <div className="flex flex-1 overflow-hidden">
         {(showDataSources || showChannels) && (
-          <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
+          <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
             {showDataSources && (
               <DataSourceSelector
                 onConnect={handleDataSourceConnect}
@@ -157,9 +161,9 @@ export default function ChatInterface() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-8">
             {messages.length === 0 && (
-              <div className="text-center text-gray-500 mt-20">
-                <h2 className="text-3xl font-bold mb-6">Welcome to Markopolo Chats</h2>
-                <p className="text-xl text-gray-600">Connect your data sources and channels to create targeted campaigns</p>
+              <div className="text-center text-gray-500 dark:text-gray-400 mt-20">
+                <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Welcome to Markopolo Chats</h2>
+                <p className="text-xl text-gray-600 dark:text-gray-300">Connect your data sources and channels to create targeted campaigns</p>
               </div>
             )}
             
@@ -173,7 +177,7 @@ export default function ChatInterface() {
             
             {isLoading && (
               <div className="flex justify-start mb-4">
-                <div className="bg-white border border-gray-200 rounded-xl p-5 max-w-xs shadow-sm">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 max-w-xs shadow-sm">
                   <div className="flex space-x-2">
                     <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
                     <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -188,7 +192,7 @@ export default function ChatInterface() {
 
 
           {/* Input Area */}
-          <div className="bg-white border-t border-gray-200 p-6">
+          <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6">
             <div className="flex space-x-4">
               <input
                 type="text"
@@ -196,7 +200,7 @@ export default function ChatInterface() {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder="Ask me about your campaign strategy..."
-                className="flex-1 px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="flex-1 px-5 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 disabled={isLoading}
               />
               <button

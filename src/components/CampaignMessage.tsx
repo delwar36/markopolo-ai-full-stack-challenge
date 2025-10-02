@@ -71,38 +71,38 @@ ${JSON.stringify(campaign, null, 2)}
 
   return (
     <div className="flex justify-start mb-4">
-      <div className="max-w-4xl bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <div className="max-w-4xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm">
         <div className="flex items-center space-x-2 mb-4">
           <span className="text-2xl">🤖</span>
-          <span className="font-semibold text-gray-900">Campaign Generator</span>
+          <span className="font-semibold text-gray-900 dark:text-white">Campaign Generator</span>
         </div>
         
         <div className="prose prose-sm max-w-none">
           <ReactMarkdown
             components={{
               h2: ({ children }) => (
-                <h2 className="text-lg font-bold text-gray-900 mt-4 mb-2 first:mt-0">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mt-4 mb-2 first:mt-0">
                   {children}
                 </h2>
               ),
               h3: ({ children }) => (
-                <h3 className="text-base font-semibold text-gray-800 mt-3 mb-2">
+                <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200 mt-3 mb-2">
                   {children}
                 </h3>
               ),
               ul: ({ children }) => (
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 dark:text-gray-300">
                   {children}
                 </ul>
               ),
               li: ({ children }) => (
-                <li className="text-sm text-gray-700">{children}</li>
+                <li className="text-sm text-gray-700 dark:text-gray-300">{children}</li>
               ),
               p: ({ children }) => (
-                <p className="text-sm text-gray-700 mb-2">{children}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{children}</p>
               ),
               strong: ({ children }) => (
-                <strong className="font-semibold text-gray-900">{children}</strong>
+                <strong className="font-semibold text-gray-900 dark:text-white">{children}</strong>
               ),
               code: ({ children, className }) => {
                 const isJson = className?.includes('language-json');
@@ -135,7 +135,7 @@ ${JSON.stringify(campaign, null, 2)}
                   );
                 }
                 return (
-                  <code className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-xs font-mono">
+                  <code className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-xs font-mono">
                     {children}
                   </code>
                 );
@@ -167,7 +167,7 @@ ${JSON.stringify(campaign, null, 2)}
                 </div>
               ),
               hr: () => (
-                <hr className="border-gray-200 my-4" />
+                <hr className="border-gray-200 dark:border-gray-700 my-4" />
               ),
             }}
           >
