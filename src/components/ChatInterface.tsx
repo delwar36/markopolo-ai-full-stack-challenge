@@ -9,7 +9,7 @@ import DropdownSelector from './DropdownSelector';
 import DataSourceConfigModal from './DataSourceConfigModal';
 import ChannelConfigModal from './ChannelConfigModal';
 import Chip from './Chip';
-import { generateCampaignPayload } from '@/utils/campaignGenerator';
+import { generateCampaignPayload, generateChatId } from '@/utils/campaignGenerator';
 import { useChat } from '@/contexts/ChatContext';
 import { Chat } from '@/contexts/ChatContext';
 
@@ -98,7 +98,9 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
   const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const [selectedDataSource, setSelectedDataSource] = useState<DataSource | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+  const [showOptionsPopup, setShowOptionsPopup] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
 
   // Get current chat data
   const messages = useMemo(() => currentChat?.messages || [], [currentChat?.messages]);
@@ -117,8 +119,25 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll when there are messages or campaign output
+    if (messages.length > 0 || campaignOutput) {
+      scrollToBottom();
+    }
   }, [messages, campaignOutput]);
+
+  // Handle clicking outside options popup
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
+        setShowOptionsPopup(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -269,6 +288,40 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     setSelectedChannel(null);
   };
 
+  const renderOptionsPopup = () => (
+    <div
+      ref={optionsRef}
+      className="absolute top-full right-0 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-2 z-50"
+    >
+      <div className="flex flex-col space-y-1">
+        <button
+          onClick={() => {
+            setShowOptionsPopup(false);
+            // Handle attachment action
+          }}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+        >
+          <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+          </svg>
+          <span className="text-sm text-gray-700 dark:text-gray-300">Attach File</span>
+        </button>
+        <button
+          onClick={() => {
+            setShowOptionsPopup(false);
+            // Handle microphone action
+          }}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+        >
+          <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+          </svg>
+          <span className="text-sm text-gray-700 dark:text-gray-300">Voice Message</span>
+        </button>
+      </div>
+    </div>
+  );
+
 
   return (
     <div className="flex flex-col flex-1 h-screen bg-gray-50 dark:bg-gray-900">
@@ -288,7 +341,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
             </button>
 
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{currentChat?.title}</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{currentChat?.title|| "Markopolo AI"}</h1>
             </div>
           </div>
 
@@ -301,24 +354,25 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-8 min-h-0 scroll-smooth">
+        <div className={`flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 ${messages.length > 0 ? 'overflow-y-auto scroll-smooth p-4 lg:p-8' : 'flex flex-col'}`}>
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center px-4 py-8 min-h-[95%]">
+            <div className="flex flex-col items-center justify-center flex-1 px-4 py-8 bg-gray-50 dark:bg-gray-900">
+              <h1 className="text-xl lg:text-3xl font-bold text-gray-900 dark:text-white p-6">What can I help you with?</h1>
               {/* Empty State - Perplexity Style */}
-              <div className="flex flex-col items-center justify-center px-4 py-8">
+              <div className="flex flex-col items-center justify-center">
                 <div className="w-full max-w-4xl">
                   {/* Main Input Area */}
                   <div className="relative mb-8">
-                    <div className="flex items-center gap-2 p-4 rounded-2xl bg-gray-800 dark:bg-gray-800 shadow-lg border border-gray-700 dark:border-gray-600 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
-                      {/* Left Icons */}
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-full bg-gray-700 dark:bg-gray-700">
-                          <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-2 p-3 sm:p-4 rounded-2xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+                      {/* Left Icons - Hidden on mobile */}
+                      <div className="hidden sm:flex items-center gap-2">
+                        <div className="p-2 rounded-full bg-gray-100 dark:bg-gray-700">
+                          <svg className="w-5 h-5 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                           </svg>
                         </div>
-                        <div className="p-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                          <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                           </svg>
                         </div>
@@ -354,30 +408,55 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                               : "Ask me about your campaign strategy..."
                           }
                           disabled={isLoading}
-                          className="flex-1 min-w-0 bg-transparent text-sm text-white placeholder-gray-400 focus:outline-none"
+                          className="flex-1 min-w-[200px] bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none"
                         />
 
                       </div>
 
-                      {/* Right Icons */}
+                      {/* Right Icons - Desktop: Show all icons, Mobile: Show only plus icon */}
                       <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                          </svg>
+                        {/* Desktop: Show individual icons */}
+                        <div className="hidden sm:flex items-center gap-2">
+                          <div className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                          </div>
+                          <div className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                          </div>
+                          <button
+                            onClick={handleSendMessage}
+                            disabled={!inputValue.trim() || isLoading}
+                            className="px-6 py-2 bg-blue-600 dark:bg-gray-600 hover:bg-blue-700 dark:hover:bg-gray-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-xl transition-colors font-medium text-sm disabled:cursor-not-allowed"
+                          >
+                            {isLoading ? 'Sending...' : 'Send'}
+                          </button>
                         </div>
-                        <div className="p-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                          </svg>
+
+                        {/* Mobile: Show plus icon with popup and separate send button */}
+                        <div className="sm:hidden flex items-center gap-2">
+                          <div className="relative">
+                            <button
+                              onClick={() => setShowOptionsPopup(!showOptionsPopup)}
+                              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                            </button>
+                            {showOptionsPopup && renderOptionsPopup()}
+                          </div>
+                          <button
+                            onClick={handleSendMessage}
+                            disabled={!inputValue.trim() || isLoading}
+                            className="px-4 py-2 bg-blue-600 dark:bg-gray-600 hover:bg-blue-700 dark:hover:bg-gray-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-xl transition-colors font-medium text-sm disabled:cursor-not-allowed"
+                          >
+                            {isLoading ? 'Sending...' : 'Send'}
+                          </button>
                         </div>
-                        <button
-                          onClick={handleSendMessage}
-                          disabled={!inputValue.trim() || isLoading}
-                          className="px-6 py-2 bg-gray-600 dark:bg-gray-600 hover:bg-gray-500 dark:hover:bg-gray-500 disabled:bg-gray-700 dark:disabled:bg-gray-700 text-white rounded-xl transition-colors font-medium text-sm disabled:cursor-not-allowed"
-                        >
-                          {isLoading ? 'Sending...' : 'Send'}
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -387,38 +466,63 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                     <div className="flex-1 max-w-xs">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">Connect Data Sources</h3>
                       <div className="space-y-2">
-                        {availableDataSources.slice(0, 3).map((source) => (
-                          <button
-                            key={source.id}
-                            onClick={() => handleEmptyDataSourceClick(source)}
-                            className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
-                          >
-                            <span className="text-xl">{source.icon}</span>
-                            <div>
-                              <div className="font-medium text-sm text-gray-900 dark:text-white">{source.name}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">{source.description}</div>
-                            </div>
-                          </button>
-                        ))}
+                        {availableDataSources.slice(0, 3).map((source) => {
+                          const isSelected = connectedDataSources.some(item => item.id == source.id);
+                          return (
+                            <button
+                              key={source.id}
+                              onClick={() => isSelected ? handleDataSourceRemove(source) : handleEmptyDataSourceClick(source)}
+                              className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left${isSelected ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left'}`}
+                            >
+                              <span className="text-xl flex-shrink-0">{source.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {source.name}
+                                </h4>
+                                <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
+                                  {source.description}
+                                </p>
+                              </div>
+                              {isSelected && (
+                                <div className="flex-shrink-0">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                </div>
+                              )}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
 
                     <div className="flex-1 max-w-xs">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">Select Channels</h3>
                       <div className="space-y-2">
-                        {availableChannels.slice(0, 3).map((channel) => (
-                          <button
-                            key={channel.id}
-                            onClick={() => handleEmptyChannelClick(channel)}
-                            className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
-                          >
-                            <span className="text-xl">{channel.icon}</span>
-                            <div>
-                              <div className="font-medium text-sm text-gray-900 dark:text-white">{channel.name}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">{channel.description}</div>
-                            </div>
-                          </button>
-                        ))}
+                        {availableChannels.slice(0, 4).map((channel) => {
+                          const isSelected = selectedChannels.some(item => item.id == channel.id);
+                          return (
+                            <button
+                              key={channel.id}
+                              onClick={() => isSelected ? handleChannelRemove(channel) : handleEmptyChannelClick(channel)}
+                              className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left ${isSelected ? 'border-green-500 bg-green-50 dark:bg-green-900/20 ' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left'}`}
+
+                            >
+                              <span className="text-xl flex-shrink-0">{channel.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {channel.name}
+                                </h4>
+                                <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
+                                  {channel.description}
+                                </p>
+                              </div>
+                              {isSelected && (
+                                <div className="flex-shrink-0">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                </div>
+                              )}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
@@ -472,20 +576,20 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
 
 
         {/* Input Area */}
-        {messages.length > 0 && <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 lg:p-6">
+        {messages.length > 0 && <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 lg:p-6">
           {/* Input with Chips */}
           <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4 mb-4">
             <div className="flex-1 relative">
-              <div className="flex items-center gap-2 p-4 rounded-2xl bg-gray-800 dark:bg-gray-800 shadow-lg border border-gray-700 dark:border-gray-600 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
-                {/* Left Icons */}
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-full bg-gray-700 dark:bg-gray-700">
-                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-2 p-3 sm:p-4 rounded-2xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+                {/* Left Icons - Hidden on mobile */}
+                <div className="hidden sm:flex items-center gap-2">
+                  <div className="p-2 rounded-full bg-gray-100 dark:bg-gray-700">
+                    <svg className="w-5 h-5 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
-                  <div className="p-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                   </div>
@@ -522,31 +626,55 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                         : "Ask me about your campaign strategy..."
                     }
                     disabled={isLoading}
-                    className="flex-1 min-w-0 bg-transparent text-sm text-white placeholder-gray-400 focus:outline-none"
+                    className="flex-1 min-w-0 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none"
                   />
 
                 </div>
 
-
-                {/* Right Icons */}
+                {/* Right Icons - Desktop: Show all icons, Mobile: Show only plus icon */}
                 <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
+                  {/* Desktop: Show individual icons */}
+                  <div className="hidden sm:flex items-center gap-2">
+                    <div className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                      <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                    </div>
+                    <div className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                      <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      </svg>
+                    </div>
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!inputValue.trim() || isLoading}
+                      className="px-6 py-2 bg-blue-600 dark:bg-gray-600 hover:bg-blue-700 dark:hover:bg-gray-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-xl transition-colors font-medium text-sm disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? 'Sending...' : 'Send'}
+                    </button>
                   </div>
-                  <div className="p-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-700 transition-colors cursor-pointer">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                    </svg>
+
+                  {/* Mobile: Show plus icon with popup and separate send button */}
+                  <div className="sm:hidden flex items-center gap-2">
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowOptionsPopup(!showOptionsPopup)}
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </button>
+                      {showOptionsPopup && renderOptionsPopup()}
+                    </div>
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!inputValue.trim() || isLoading}
+                      className="px-4 py-2 bg-blue-600 dark:bg-gray-600 hover:bg-blue-700 dark:hover:bg-gray-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-xl transition-colors font-medium text-sm disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? 'Sending...' : 'Send'}
+                    </button>
                   </div>
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim() || isLoading}
-                    className="px-6 py-2 bg-gray-600 dark:bg-gray-600 hover:bg-gray-500 dark:hover:bg-gray-500 disabled:bg-gray-700 dark:disabled:bg-gray-700 text-white rounded-xl transition-colors font-medium text-sm disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? 'Sending...' : 'Send'}
-                  </button>
                 </div>
               </div>
             </div>
@@ -576,7 +704,5 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
   );
 }
 
-const generateChatId = () => {
-  return `chat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-};
+
 

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Message, CampaignPayload, DataSource, Channel, DataSourceConfig, ChannelConfig } from '@/types';
+import { generateChatId } from '@/utils/campaignGenerator';
 
 export interface Chat {
   id: string;
@@ -83,9 +84,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   }, [chats, mounted]);
 
-  const generateChatId = () => {
-    return `chat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  };
 
   const generateChatTitle = (messages: Message[]) => {
     if (messages.length === 0) return 'New Chat';

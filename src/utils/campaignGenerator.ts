@@ -136,3 +136,7 @@ function calculateMetrics(dataSources: DataSource[], channels: Channel[]): {
     expectedConversion: Math.round((baseConversion * engagementMultiplier) * 100) / 100
   };
 }
+
+export function generateChatId(): string {
+  return `chat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
