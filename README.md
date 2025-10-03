@@ -51,26 +51,6 @@ A modern chat interface similar to Perplexity that allows users to connect to va
    - Budget allocation
    - Performance metrics
 
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/
-│   ├── ChatInterface.tsx
-│   ├── MessageBubble.tsx
-│   ├── DataSourceSelector.tsx
-│   ├── ChannelSelector.tsx
-│   └── CampaignOutput.tsx
-├── types/
-│   └── index.ts
-└── utils/
-    └── campaignGenerator.ts
-```
-
 ## Key Components
 
 ### ChatInterface
