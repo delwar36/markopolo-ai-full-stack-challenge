@@ -78,6 +78,7 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
   const {
     currentChat,
+    chats,
     tempDataSources,
     tempChannels,
     addMessage,
@@ -125,27 +126,27 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     // Split text into chunks for more realistic streaming
     const chunks = fullText.split(/(?<=[.!?])\s+/).filter(chunk => chunk.trim());
     let currentText = '';
-    
+
     for (let i = 0; i < chunks.length; i++) {
       currentText += (i > 0 ? ' ' : '') + chunks[i];
-      
+
       // Update the message with current text
       updateMessage(chatId, messageId, {
         content: currentText,
         isStreaming: i < chunks.length - 1
       });
-      
+
       // Scroll to bottom to follow the streaming text
       scrollToBottom();
-      
+
       // Wait between chunks (longer pause for sentences, shorter for phrases)
-      const delay = chunks[i].endsWith('.') || chunks[i].endsWith('!') || chunks[i].endsWith('?') 
+      const delay = chunks[i].endsWith('.') || chunks[i].endsWith('!') || chunks[i].endsWith('?')
         ? Math.random() * 300 + 200  // 200-500ms for sentence endings
         : Math.random() * 150 + 100; // 100-250ms for regular chunks
-      
+
       await new Promise(resolve => setTimeout(resolve, delay));
     }
-    
+
     // Mark streaming as complete
     updateMessage(chatId, messageId, {
       isStreaming: false
@@ -156,7 +157,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
   const streamCampaignGeneration = async (chatId: string, dataSources: DataSource[], channels: Channel[]) => {
     // Create initial campaign structure
     const campaign = await generateCampaignPayload(dataSources, channels);
-    
+
     // Set initial campaign with streaming flag
     setCampaignOutput(chatId, {
       ...campaign,
@@ -176,15 +177,15 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     // Stream each section progressively
     for (let i = 0; i < sections.length; i++) {
       const section = sections[i];
-      
+
       // Wait for the delay
       await new Promise(resolve => setTimeout(resolve, section.delay));
-      
+
       // Add section to streaming sections
       updateCampaignOutput(chatId, {
         streamingSections: [...(campaign.streamingSections || []), section.name]
       });
-      
+
       // Scroll to bottom to follow the campaign generation
       scrollToBottom();
     }
@@ -277,7 +278,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
         "I'm setting up the campaign parameters including budget allocation, frequency caps, and performance tracking.",
         "Almost done! I'm finalizing the campaign strategy with personalized messaging and expected performance metrics."
       ];
-      
+
       const fullResponse = campaignResponses.join(" ");
       await streamText(chatId, assistantMessage.id, fullResponse);
 
@@ -303,7 +304,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
         "Once you've connected your data and chosen your channels, I'll analyze your audience segments and generate a comprehensive campaign strategy tailored to your specific needs.",
         "This will include personalized content, optimal timing, budget allocation, and expected performance metrics for each channel."
       ];
-      
+
       const fullResponse = responses.join(" ");
       await streamText(chatId, assistantMessage.id, fullResponse);
       setIsLoading(false);
@@ -422,19 +423,21 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
       <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-6 py-4 lg:py-5 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {/* Mobile hamburger menu */}
-            <button
-              onClick={onSidebarToggle}
-              className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Open sidebar"
-            >
-              <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+            {/* Mobile hamburger menu - only show when there are chats */}
+            {chats.length > 0 && (
+              <button
+                onClick={onSidebarToggle}
+                className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Open sidebar"
+              >
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            )}
 
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{currentChat?.title|| "Markopolo AI"}</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{currentChat?.title || "Markopolo AI"}</h1>
             </div>
           </div>
 
@@ -523,6 +526,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                           <button
                             onClick={handleSendMessage}
                             disabled={!inputValue.trim() || isLoading}
+                            title={!inputValue.trim() || isLoading ? 'Please enter a message' : 'Send'}
                             className="px-6 py-2 bg-blue-600 dark:bg-gray-600 hover:bg-blue-700 dark:hover:bg-gray-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-xl transition-colors font-medium text-sm disabled:cursor-not-allowed"
                           >
                             {isLoading ? 'Sending...' : 'Send'}
@@ -545,6 +549,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                           <button
                             onClick={handleSendMessage}
                             disabled={!inputValue.trim() || isLoading}
+                            title={!inputValue.trim() || isLoading ? 'Please enter a message' : 'Send'}
                             className="px-4 py-2 bg-blue-600 dark:bg-gray-600 hover:bg-blue-700 dark:hover:bg-gray-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-xl transition-colors font-medium text-sm disabled:cursor-not-allowed"
                           >
                             {isLoading ? 'Sending...' : 'Send'}
