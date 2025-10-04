@@ -10,14 +10,16 @@ interface CampaignMessageProps {
 }
 
 export default function CampaignMessage({ campaign }: CampaignMessageProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const { showToast } = useToast();
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(JSON.stringify(campaign, null, 2));
+      // Filter out streamingCode from the copied JSON
+      const { streamingCode, ...campaignWithoutStreamingCode } = campaign;
+      await navigator.clipboard.writeText(JSON.stringify(campaignWithoutStreamingCode, null, 2));
       setCopied(true);
       showToast({
         type: 'success',
@@ -84,7 +86,7 @@ export default function CampaignMessage({ campaign }: CampaignMessageProps) {
 
   const formatCampaignAsMarkdown = (campaign: CampaignPayload) => {
     const sections = [];
-    const streamingSections = campaign.streamingSections || [];
+    const strSections = campaign.streamingSections || [];
     
     sections.push(`## 🎯 Campaign Generated Successfully!`);
     
@@ -96,34 +98,34 @@ export default function CampaignMessage({ campaign }: CampaignMessageProps) {
 - **Expected Reach**: ${campaign.metrics.expectedReach.toLocaleString()}`);
 
     // Show sections based on streaming progress
-    if (streamingSections.includes('audience') || !campaign.isStreaming) {
+    if (strSections.includes('audience') || !campaign.isStreaming) {
       sections.push(`### 👥 Audience Targeting
 - **Segments**: ${campaign.audience.segments.join(', ')}
 - **Demographics**: ${Object.entries(campaign.audience.demographics).map(([key, value]) => `${key}: ${value}`).join(', ')}
 - **Behaviors**: ${Object.entries(campaign.audience.behaviors).map(([key, value]) => `${key}: ${value}`).join(', ')}`);
     }
 
-    if (streamingSections.includes('timing') || !campaign.isStreaming) {
+    if (strSections.includes('timing') || !campaign.isStreaming) {
       sections.push(`### ⏰ Timing Strategy
 - **Duration**: ${new Date(campaign.timing.startDate).toLocaleDateString()} - ${new Date(campaign.timing.endDate).toLocaleDateString()}
 - **Frequency**: ${campaign.timing.frequency}
 - **Timezone**: ${campaign.timing.timezone}`);
     }
 
-    if (streamingSections.includes('content') || !campaign.isStreaming) {
+    if (strSections.includes('content') || !campaign.isStreaming) {
       sections.push(`### 📝 Content Strategy
 ${campaign.content.subject ? `- **Subject**: ${campaign.content.subject}` : ''}
 - **Message**: ${campaign.content.body}
 ${campaign.content.cta ? `- **Call-to-Action**: ${campaign.content.cta}` : ''}`);
     }
 
-    if (streamingSections.includes('budget') || !campaign.isStreaming) {
+    if (strSections.includes('budget') || !campaign.isStreaming) {
       sections.push(`### 💰 Budget Allocation
 - **Total Budget**: $${campaign.budget?.total.toLocaleString() || 'N/A'}
 ${campaign.budget?.perChannel ? Object.entries(campaign.budget.perChannel).map(([channel, amount]) => `- **${channel}**: $${amount.toLocaleString()}`).join('\n') : ''}`);
     }
 
-    if (streamingSections.includes('metrics') || !campaign.isStreaming) {
+    if (strSections.includes('metrics') || !campaign.isStreaming) {
       sections.push(`### 📈 Expected Performance
 - **Reach**: ${campaign.metrics.expectedReach.toLocaleString()}
 - **Engagement Rate**: ${(campaign.metrics.expectedEngagement * 100).toFixed(1)}%
@@ -133,11 +135,11 @@ ${campaign.budget?.perChannel ? Object.entries(campaign.budget.perChannel).map((
     // Add loading indicator if still streaming
     if (campaign.isStreaming) {
       const pendingTasks = [];
-      if (!streamingSections.includes('audience')) pendingTasks.push('- 🔍 Analyzing audience segments...');
-      if (!streamingSections.includes('timing')) pendingTasks.push('- ⏱️ Optimizing timing strategy...');
-      if (!streamingSections.includes('content')) pendingTasks.push('- ✍️ Crafting personalized content...');
-      if (!streamingSections.includes('budget')) pendingTasks.push('- 💰 Calculating budget allocation...');
-      if (!streamingSections.includes('metrics')) pendingTasks.push('- 📊 Computing performance metrics...');
+      if (!strSections.includes('audience')) pendingTasks.push('- 🔍 Analyzing audience segments...');
+      if (!strSections.includes('timing')) pendingTasks.push('- ⏱️ Optimizing timing strategy...');
+      if (!strSections.includes('content')) pendingTasks.push('- ✍️ Crafting personalized content...');
+      if (!strSections.includes('budget')) pendingTasks.push('- 💰 Calculating budget allocation...');
+      if (!strSections.includes('metrics')) pendingTasks.push('- 📊 Computing performance metrics...');
       
       if (pendingTasks.length > 0) {
         sections.push(`### 🔄 Generating...
@@ -145,20 +147,26 @@ ${pendingTasks.join('\n')}`);
       }
     }
 
-    // Only show JSON when streaming is complete
-    if (!campaign.isStreaming) {
-      sections.push(`---
+    // Always show JSON payload (streaming or complete)
+    // Filter out streamingCode from the JSON output
+    const { streamingCode,streamingSections, isStreaming, ...campaignWithoutStreamingCode } = campaign;
+    const jsonToDisplay = campaign.isStreaming && campaign.streamingCode 
+      ? campaign.streamingCode 
+      : JSON.stringify(campaignWithoutStreamingCode, null, 2);
+    
+    sections.push(`---
 ### 🔧 Raw JSON Payload
 \`\`\`json
-${JSON.stringify(campaign, null, 2)}
+${jsonToDisplay}
 \`\`\``);
-    }
 
     return sections.join('\n\n');
   };
 
   const getJsonPreview = (campaign: CampaignPayload) => {
-    const jsonString = JSON.stringify(campaign, null, 2);
+    // Filter out streamingCode from the preview
+    const { streamingCode, ...campaignWithoutStreamingCode } = campaign;
+    const jsonString = JSON.stringify(campaignWithoutStreamingCode, null, 2);
     const lines = jsonString.split('\n');
     return lines.slice(0, 3).join('\n') + (lines.length > 3 ? '\n  ...' : '');
   };
@@ -166,7 +174,7 @@ ${JSON.stringify(campaign, null, 2)}
   return (
     <div className="flex justify-start mb-4">
       <div className="w-full max-w-xs sm:max-w-md lg:max-w-5xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 lg:p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center mb-4">
           <div className="flex items-center space-x-2">
             <span className="text-2xl">🤖</span>
             <span className="font-semibold text-gray-900 dark:text-white">Campaign Generator</span>
@@ -177,30 +185,6 @@ ${JSON.stringify(campaign, null, 2)}
               </div>
             )}
           </div>
-          
-          {/* Run Campaign Button */}
-          <button
-            onClick={handleRunCampaign}
-            disabled={isRunning || campaign.isStreaming}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-500 text-white rounded-lg transition-colors font-medium text-sm"
-          >
-            {isRunning ? (
-              <>
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Running...</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-6a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Run Campaign</span>
-              </>
-            )}
-          </button>
         </div>
         
         <div className="prose prose-sm max-w-none">
@@ -233,11 +217,18 @@ ${JSON.stringify(campaign, null, 2)}
               code: ({ children, className }) => {
                 const isJson = className?.includes('language-json');
                 if (isJson) {
+                  // Use streaming code if available, otherwise use children or full JSON
+                  const displayCode = campaign.isStreaming && campaign.streamingCode 
+                    ? campaign.streamingCode 
+                    : (isExpanded ? children : getJsonPreview(campaign));
+                  
                   return (
                     <div className="mt-4">
                       <div className="bg-gray-900 rounded-lg overflow-hidden">
                         <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
-                          <span className="text-xs font-medium text-gray-300">JSON Payload</span>
+                          <span className="text-xs font-medium text-gray-300">
+                            JSON Payload {campaign.isStreaming ? '(Streaming)' : ''}
+                          </span>
                           <div className="flex space-x-3">
                             <button
                               onClick={copyToClipboard}
@@ -254,7 +245,12 @@ ${JSON.stringify(campaign, null, 2)}
                           </div>
                         </div>
                         <pre className="text-gray-100 p-4 overflow-x-auto text-xs">
-                          <code>{isExpanded ? children : getJsonPreview(campaign)}</code>
+                          <code>
+                            {displayCode}
+                            {campaign.isStreaming && (
+                              <span className="inline-block w-0.5 h-4 bg-blue-500 ml-1 animate-pulse"></span>
+                            )}
+                          </code>
                         </pre>
                       </div>
                     </div>
@@ -278,6 +274,32 @@ ${JSON.stringify(campaign, null, 2)}
           >
             {formatCampaignAsMarkdown(campaign)}
           </ReactMarkdown>
+        </div>
+
+        {/* Run Campaign Button - Below the content */}
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={handleRunCampaign}
+            disabled={isRunning || campaign.isStreaming}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-500 text-white rounded-lg transition-colors font-medium text-sm"
+          >
+            {isRunning ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Running...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-6a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Run Campaign</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

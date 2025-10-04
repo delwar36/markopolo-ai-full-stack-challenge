@@ -12,12 +12,17 @@ export default function Home() {
   return (
     <div className="flex h-screen">
       {chats.length > 0 && (
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <Sidebar 
+          isOpen={isSidebarOpen} 
+          onClose={() => setIsSidebarOpen(false)}
+        />
       )}
-      <ChatInterface 
-        isSidebarOpen={isSidebarOpen} 
-        onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-      />
+          <div className="flex-1">
+            <ChatInterface
+              isSidebarOpen={isSidebarOpen}
+              onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            />
+          </div>
     </div>
   );
 }

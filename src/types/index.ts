@@ -87,6 +87,7 @@ export interface CampaignPayload {
   };
   isStreaming?: boolean;
   streamingSections?: string[];
+  streamingCode?: string;
 }
 
 export interface ConnectionStatus {

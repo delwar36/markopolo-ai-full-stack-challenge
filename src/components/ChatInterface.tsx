@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Message, DataSource, Channel, DataSourceConfig, ChannelConfig } from '@/types';
 import MessageBubble from './MessageBubble';
 import CampaignMessage from './CampaignMessage';
-import ThemeToggle from './ThemeToggle';
 import DropdownSelector from './DropdownSelector';
 import DataSourceConfigModal from './DataSourceConfigModal';
 import ChannelConfigModal from './ChannelConfigModal';
@@ -12,6 +11,89 @@ import Chip from './Chip';
 import { generateCampaignPayload, generateChatId } from '@/utils/campaignGenerator';
 import { useChat } from '@/contexts/ChatContext';
 import { Chat } from '@/contexts/ChatContext';
+
+interface EditableTitleProps {
+  title: string;
+  onUpdate: (newTitle: string) => void;
+}
+
+function EditableTitle({ title, onUpdate }: EditableTitleProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(title);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setEditTitle(title);
+  }, [title]);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleSubmit = () => {
+    const trimmedTitle = editTitle.trim();
+    if (trimmedTitle && trimmedTitle !== title) {
+      onUpdate(trimmedTitle);
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSubmit();
+    } else if (e.key === 'Escape') {
+      setEditTitle(title);
+      setIsEditing(false);
+    }
+  };
+
+  const handleBlur = () => {
+    handleSubmit();
+  };
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        value={editTitle}
+        onChange={(e) => setEditTitle(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
+        className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-none outline-none focus:ring-0 p-0 w-full"
+        placeholder="Enter chat title..."
+      />
+    );
+  }
+
+  return (
+    <div 
+      className="group flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-2 py-1 -mx-2 -my-1 transition-colors"
+      onClick={() => setIsEditing(true)}
+      title="Click to edit title"
+    >
+      <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
+        {title}
+      </h1>
+      <svg 
+        className="w-4 h-4 text-gray-400 dark:text-gray-500" 
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24"
+      >
+        <path 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          strokeWidth={2} 
+          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" 
+        />
+      </svg>
+    </div>
+  );
+}
 
 // Available data sources
 const availableDataSources: DataSource[] = [
@@ -83,6 +165,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     tempChannels,
     addMessage,
     updateMessage,
+    updateChat,
     setCampaignOutput,
     updateCampaignOutput,
     connectDataSource,
@@ -121,28 +204,28 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     }, 100);
   };
 
-  // Helper function to simulate streaming text
+  // Helper function to simulate streaming text word by word
   const streamText = async (chatId: string, messageId: string, fullText: string) => {
-    // Split text into chunks for more realistic streaming
-    const chunks = fullText.split(/(?<=[.!?])\s+/).filter(chunk => chunk.trim());
+    // Split text into words for word-by-word streaming
+    const words = fullText.split(/\s+/).filter(word => word.trim());
     let currentText = '';
 
-    for (let i = 0; i < chunks.length; i++) {
-      currentText += (i > 0 ? ' ' : '') + chunks[i];
+    for (let i = 0; i < words.length; i++) {
+      currentText += (i > 0 ? ' ' : '') + words[i];
 
       // Update the message with current text
       updateMessage(chatId, messageId, {
         content: currentText,
-        isStreaming: i < chunks.length - 1
+        isStreaming: i < words.length - 1
       });
 
       // Scroll to bottom to follow the streaming text
       scrollToBottom();
 
-      // Wait between chunks (longer pause for sentences, shorter for phrases)
-      const delay = chunks[i].endsWith('.') || chunks[i].endsWith('!') || chunks[i].endsWith('?')
-        ? Math.random() * 300 + 200  // 200-500ms for sentence endings
-        : Math.random() * 150 + 100; // 100-250ms for regular chunks
+      // Wait between words (longer pause for punctuation, shorter for regular words)
+      const delay = words[i].endsWith('.') || words[i].endsWith('!') || words[i].endsWith('?') || words[i].endsWith(',')
+        ? Math.random() * 200 + 150  // 150-350ms for punctuation
+        : Math.random() * 100 + 50; // 50-150ms for regular words
 
       await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -153,46 +236,48 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     });
   };
 
-  // Helper function to stream campaign generation
+  // Helper function to stream campaign generation with code streaming
   const streamCampaignGeneration = async (chatId: string, dataSources: DataSource[], channels: Channel[]) => {
     // Create initial campaign structure
     const campaign = await generateCampaignPayload(dataSources, channels);
 
-    // Set initial campaign with streaming flag
+    // Set initial campaign with streaming flag and empty content
     setCampaignOutput(chatId, {
       ...campaign,
       isStreaming: true,
-      streamingSections: []
+      streamingSections: [],
+      streamingCode: ''
     });
 
-    // Define streaming sections with realistic delays
-    const sections = [
-      { name: 'audience', delay: 800 },
-      { name: 'timing', delay: 600 },
-      { name: 'content', delay: 1000 },
-      { name: 'budget', delay: 700 },
-      { name: 'metrics', delay: 900 }
-    ];
-
-    // Stream each section progressively
-    for (let i = 0; i < sections.length; i++) {
-      const section = sections[i];
-
-      // Wait for the delay
-      await new Promise(resolve => setTimeout(resolve, section.delay));
-
-      // Add section to streaming sections
+    // Convert campaign to JSON string for streaming
+    const campaignJson = JSON.stringify(campaign, null, 2);
+    const jsonLines = campaignJson.split('\n');
+    
+    // Stream the JSON code line by line
+    let currentCode = '';
+    for (let i = 0; i < jsonLines.length; i++) {
+      currentCode += (i > 0 ? '\n' : '') + jsonLines[i];
+      
+      // Update campaign with current streaming code
       updateCampaignOutput(chatId, {
-        streamingSections: [...(campaign.streamingSections || []), section.name]
+        streamingCode: currentCode
       });
 
-      // Scroll to bottom to follow the campaign generation
+      // Scroll to bottom to follow the code streaming
       scrollToBottom();
+
+      // Wait between lines (faster for code streaming)
+      const delay = jsonLines[i].includes('{') || jsonLines[i].includes('}') || jsonLines[i].includes('[') || jsonLines[i].includes(']')
+        ? Math.random() * 100 + 50  // 50-150ms for structural elements
+        : Math.random() * 80 + 30; // 30-110ms for regular lines
+
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
 
     // Mark streaming as complete
     updateCampaignOutput(chatId, {
-      isStreaming: false
+      isStreaming: false,
+      streamingCode: campaignJson
     });
   };
 
@@ -274,8 +359,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
       const campaignResponses = [
         "Perfect! I can see you've connected your data sources and selected your channels. Now I'm generating your targeted campaign.",
         "I'm analyzing your audience segments from your connected data sources to understand their behavior patterns and preferences.",
-        "Based on your selected channels, I'm optimizing the content and timing for each platform to maximize engagement.",
-        "I'm setting up the campaign parameters including budget allocation, frequency caps, and performance tracking.",
+        "Based on your selected channels, I'm optimizing the content and timing for each platform to maximize engagement.",        
         "Almost done! I'm finalizing the campaign strategy with personalized messaging and expected performance metrics."
       ];
 
@@ -437,12 +521,19 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
             )}
 
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{currentChat?.title || "Markopolo AI"}</h1>
+              {currentChat ? (
+                <EditableTitle 
+                  title={currentChat.title} 
+                  onUpdate={(newTitle) => {
+                    updateChat(currentChat.id, { title: newTitle });
+                  }}
+                />
+              ) : (
+                <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
+                  Markopolo AI
+                </h1>
+              )}
             </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <ThemeToggle />
           </div>
         </div>
       </div>
@@ -450,7 +541,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Messages */}
-        <div className={`flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 ${messages.length > 0 ? 'overflow-y-auto scroll-smooth p-4 lg:p-8' : 'flex flex-col'}`}>
+        <div className={`flex-1 min-h-0 bg-gray-50 dark:bg-gray-900 ${messages.length > 0 ? 'overflow-y-auto scroll-smooth px-4 lg:px-8 py-4 lg:py-8' : 'flex flex-col px-4 lg:px-8'}`}>
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center flex-1 px-4 py-8 bg-gray-50 dark:bg-gray-900">
               <h1 className="text-xl lg:text-3xl font-bold text-gray-900 dark:text-white p-6">What can I help you with?</h1>
@@ -674,7 +765,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
 
 
         {/* Input Area */}
-        {messages.length > 0 && <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 lg:p-6">
+        {messages.length > 0 && <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 lg:px-8 py-3 sm:py-4 lg:py-6">
           {/* Input with Chips */}
           <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4 mb-4">
             <div className="flex-1 relative">
