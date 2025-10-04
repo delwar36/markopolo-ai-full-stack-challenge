@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { DataSource, DataSourceConfig } from '@/types';
-import Modal from './Modal';
+import Modal from '../ui/Modal';
 
 interface DataSourceConfigModalProps {
   isOpen: boolean;

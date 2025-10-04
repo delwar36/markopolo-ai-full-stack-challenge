@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { DataSource, Channel, DataSourceConfig, ChannelConfig } from '@/types';
-import DataSourceConfigModal from './DataSourceConfigModal';
-import ChannelConfigModal from './ChannelConfigModal';
+import DataSourceConfigModal from '../forms/DataSourceConfigModal';
+import ChannelConfigModal from '../forms/ChannelConfigModal';
 
 interface DropdownSelectorProps {
   type: 'dataSource' | 'channel';

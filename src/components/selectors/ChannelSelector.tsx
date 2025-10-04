@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Channel, ChannelConfig } from '@/types';
-import ChannelConfigModal from './ChannelConfigModal';
+import ChannelConfigModal from '../forms/ChannelConfigModal';
 
 interface ChannelSelectorProps {
   onSelect: (channel: Channel, config?: ChannelConfig) => void;

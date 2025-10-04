@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { DataSource, DataSourceConfig } from '@/types';
-import DataSourceConfigModal from './DataSourceConfigModal';
+import DataSourceConfigModal from '../forms/DataSourceConfigModal';
 
 interface DataSourceSelectorProps {
   onConnect: (dataSource: DataSource, config?: DataSourceConfig) => void;

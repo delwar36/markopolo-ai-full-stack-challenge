@@ -1,7 +1,7 @@
 'use client';
 
-import ChatInterface from '@/components/ChatInterface';
-import Sidebar from '@/components/Sidebar';
+import ChatInterface from '@/components/sections/ChatInterface';
+import Sidebar from '@/components/layout/Sidebar';
 import { useState } from 'react';
 import { useChat } from '@/contexts/ChatContext';
 

@@ -2,14 +2,15 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Message, DataSource, Channel, DataSourceConfig, ChannelConfig } from '@/types';
-import MessageBubble from './MessageBubble';
-import CampaignMessage from './CampaignMessage';
-import DropdownSelector from './DropdownSelector';
-import DataSourceConfigModal from './DataSourceConfigModal';
-import ChannelConfigModal from './ChannelConfigModal';
-import Chip from './Chip';
+import MessageBubble from '../chat/MessageBubble';
+import CampaignMessage from '../sections/CampaignMessage';
+import DropdownSelector from '../selectors/DropdownSelector';
+import DataSourceConfigModal from '../forms/DataSourceConfigModal';
+import ChannelConfigModal from '../forms/ChannelConfigModal';
+import Chip from '../ui/Chip';
 import { generateCampaignPayload, generateChatId } from '@/utils/campaignGenerator';
 import { useChat } from '@/contexts/ChatContext';
+import { useToast } from '../ui/ToastContainer';
 
 interface EditableTitleProps {
   title: string;
@@ -177,6 +178,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     addTempChannel,
     removeTempChannel
   } = useChat();
+  const { showToast } = useToast();
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isDataSourceModalOpen, setIsDataSourceModalOpen] = useState(false);
@@ -191,14 +193,10 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
   const messages = useMemo(() => currentChat?.messages || [], [currentChat?.messages]);
   const campaignOutput = currentChat?.campaignOutput || null;
   const connectedDataSources = useMemo(() => {
-    const sources = currentChat?.connectedDataSources || tempDataSources;
-    console.log('🔍 connectedDataSources memoized:', sources);
-    return sources;
+    return currentChat?.connectedDataSources || tempDataSources;
   }, [currentChat?.connectedDataSources, tempDataSources]);
   const selectedChannels = useMemo(() => {
-    const channels = currentChat?.selectedChannels || tempChannels;
-    console.log('🔍 selectedChannels memoized:', channels);
-    return channels;
+    return currentChat?.selectedChannels || tempChannels;
   }, [currentChat?.selectedChannels, tempChannels]);
 
   const scrollToBottom = () => {
@@ -281,6 +279,14 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     updateCampaignOutput(chatId, {
       isStreaming: false,
       streamingCode: campaignJson
+    });
+
+    // Show success toast when campaign generation is complete
+    showToast({
+      type: 'success',
+      title: 'Campaign Generated!',
+      message: 'Your campaign strategy is ready. Click "Run Campaign" to execute it.',
+      duration: 4000,
     });
   };
 
@@ -370,9 +376,6 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
       await streamText(chatId, assistantMessage.id, fullResponse);
 
       // Stream campaign generation after message streaming is complete
-      console.log('🚀 About to generate campaign with:');
-      console.log('📊 connectedDataSources:', connectedDataSources);
-      console.log('📊 selectedChannels:', selectedChannels);
       await streamCampaignGeneration(chatId, connectedDataSources, selectedChannels);
       setIsLoading(false);
     } else {

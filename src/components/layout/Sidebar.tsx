@@ -3,7 +3,7 @@
 import { useChat } from '@/contexts/ChatContext';
 import { useState } from 'react';
 import Image from 'next/image';
-import ThemeToggle from './ThemeToggle';
+import ThemeToggle from '../ui/ThemeToggle';
 
 interface SidebarProps {
   isOpen: boolean;

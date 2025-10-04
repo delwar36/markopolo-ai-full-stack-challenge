@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Channel, ChannelConfig } from '@/types';
-import Modal from './Modal';
+import Modal from '../ui/Modal';
 
 interface ChannelConfigModalProps {
   isOpen: boolean;
