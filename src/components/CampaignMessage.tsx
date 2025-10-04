@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { CampaignPayload } from '@/types';
 import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from './ToastContainer';
 
 interface CampaignMessageProps {
@@ -14,6 +17,23 @@ export default function CampaignMessage({ campaign }: CampaignMessageProps) {
   const [copied, setCopied] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const { showToast } = useToast();
+  const { theme } = useTheme();
+
+  // Custom style that removes background highlighting
+  const getCustomStyle = (baseStyle: any) => {
+    const customStyle = { ...baseStyle };
+    // Remove background from all token types
+    Object.keys(customStyle).forEach(key => {
+      if (customStyle[key] && typeof customStyle[key] === 'object') {
+        customStyle[key] = {
+          ...customStyle[key],
+          background: 'transparent',
+          backgroundColor: 'transparent',
+        };
+      }
+    });
+    return customStyle;
+  };
 
   const copyToClipboard = async () => {
     try {
@@ -39,10 +59,14 @@ export default function CampaignMessage({ campaign }: CampaignMessageProps) {
     }
   };
 
-  const handleExpand = (event: React.MouseEvent) => {
+  const handleExpand = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
     setIsExpanded(!isExpanded);
+    // Keep focus on the button after clicking
+    setTimeout(() => {
+      event.currentTarget?.focus();
+    }, 0);
   };
 
   const handleRunCampaign = async () => {
@@ -220,38 +244,53 @@ ${jsonToDisplay}
                   // Use streaming code if available, otherwise use children or full JSON
                   const displayCode = campaign.isStreaming && campaign.streamingCode 
                     ? campaign.streamingCode 
-                    : (isExpanded ? children : getJsonPreview(campaign));
+                    : (isExpanded ? String(children) : getJsonPreview(campaign));
                   
                   return (
                     <div className="mt-4">
-                      <div className="bg-gray-900 rounded-lg overflow-hidden">
-                        <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
-                          <span className="text-xs font-medium text-gray-300">
+                      <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                             JSON Payload {campaign.isStreaming ? '(Streaming)' : ''}
                           </span>
                           <div className="flex space-x-3">
                             <button
                               onClick={copyToClipboard}
-                              className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-xs font-medium transition-colors text-gray-200"
+                              className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-xs font-medium transition-colors text-gray-700 dark:text-gray-200"
                             >
                               {copied ? 'Copied!' : 'Copy'}
                             </button>
                             <button
                               onClick={(e) => handleExpand(e)}
-                              className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-xs font-medium transition-colors text-gray-200"
+                              className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-xs font-medium transition-colors text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                              tabIndex={0}
                             >
                               {isExpanded ? 'Collapse' : 'Expand'}
                             </button>
                           </div>
                         </div>
-                        <pre className="text-gray-100 p-4 overflow-x-auto text-xs">
-                          <code>
+                        <div className="relative">
+                          <SyntaxHighlighter
+                            language="json"
+                            style={getCustomStyle(theme === 'dark' ? oneDark : oneLight)}
+                            customStyle={{
+                              margin: 0,
+                              padding: '1rem',
+                              fontSize: '0.75rem',
+                              lineHeight: '1.4',
+                              background: 'transparent',
+                            }}
+                            showLineNumbers={false}
+                            wrapLines={true}
+                            wrapLongLines={true}
+                            PreTag="div"
+                          >
                             {displayCode}
-                            {campaign.isStreaming && (
-                              <span className="inline-block w-0.5 h-4 bg-blue-500 ml-1 animate-pulse"></span>
-                            )}
-                          </code>
-                        </pre>
+                          </SyntaxHighlighter>
+                          {campaign.isStreaming && (
+                            <span className="absolute bottom-4 right-4 inline-block w-0.5 h-4 bg-blue-500 animate-pulse"></span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
