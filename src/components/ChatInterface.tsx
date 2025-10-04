@@ -191,10 +191,14 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
   const messages = useMemo(() => currentChat?.messages || [], [currentChat?.messages]);
   const campaignOutput = currentChat?.campaignOutput || null;
   const connectedDataSources = useMemo(() => {
-    return currentChat?.connectedDataSources || tempDataSources;
+    const sources = currentChat?.connectedDataSources || tempDataSources;
+    console.log('🔍 connectedDataSources memoized:', sources);
+    return sources;
   }, [currentChat?.connectedDataSources, tempDataSources]);
   const selectedChannels = useMemo(() => {
-    return currentChat?.selectedChannels || tempChannels;
+    const channels = currentChat?.selectedChannels || tempChannels;
+    console.log('🔍 selectedChannels memoized:', channels);
+    return channels;
   }, [currentChat?.selectedChannels, tempChannels]);
 
   const scrollToBottom = () => {
@@ -366,6 +370,9 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
       await streamText(chatId, assistantMessage.id, fullResponse);
 
       // Stream campaign generation after message streaming is complete
+      console.log('🚀 About to generate campaign with:');
+      console.log('📊 connectedDataSources:', connectedDataSources);
+      console.log('📊 selectedChannels:', selectedChannels);
       await streamCampaignGeneration(chatId, connectedDataSources, selectedChannels);
       setIsLoading(false);
     } else {
@@ -468,7 +475,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
   const renderOptionsPopup = () => (
     <div
       ref={optionsRef}
-      className="absolute top-full right-0 mb-2 bg-pure-white dark:bg-pure-black border border-pure-gray-300 dark:border-pure-gray-700 rounded-xl shadow-lg p-2 z-50"
+      className="absolute bottom-full right-0 mb-2 bg-pure-white dark:bg-pure-black border border-pure-gray-300 dark:border-pure-gray-700 rounded-xl shadow-lg p-2 z-50"
     >
       <div className="flex flex-col space-y-1">
         <button
