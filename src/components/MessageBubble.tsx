@@ -21,20 +21,20 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
         <div
           className={`max-w-xs sm:max-w-md lg:max-w-3xl px-3 sm:px-4 py-3 rounded-lg shadow-sm ${
             isUser
-              ? 'bg-blue-600 text-white'
-              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+              ? 'bg-green-600 text-white'
+              : 'bg-pure-white dark:bg-pure-gray-800 text-pure-black dark:text-pure-white border border-pure-gray-300 dark:border-pure-gray-700'
           }`}
         >
         <p className="text-sm leading-relaxed whitespace-pre-wrap">
           {displayText}
           {message.isStreaming && (
-            <span className="inline-block w-0.5 h-4 bg-blue-500 dark:bg-blue-400 ml-1 animate-pulse"></span>
+            <span className="inline-block w-0.5 h-4 bg-green-500 dark:bg-green-400 ml-1 animate-pulse"></span>
           )}
         </p>
         <p className={`text-xs mt-2 ${
-          isUser ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
+          isUser ? 'text-green-100' : 'text-pure-gray-500 dark:text-pure-gray-400'
         }`}>
-          {message.timestamp.toLocaleTimeString()}
+          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
     </div>

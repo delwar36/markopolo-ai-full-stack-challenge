@@ -73,7 +73,7 @@ export default function ChannelSelector({ onSelect, selectedChannels }: ChannelS
 
   return (
     <div className="p-2">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Channels</h3>
+      <h3 className="text-lg font-semibold text-pure-black dark:text-pure-white mb-6">Channels</h3>
       <div className="space-y-4">
         {availableChannels.map((channel) => {
           const isSelected = isChannelSelected(channel.id);
@@ -91,15 +91,15 @@ export default function ChannelSelector({ onSelect, selectedChannels }: ChannelS
               <div className="flex items-start space-x-4">
                 <span className="text-2xl flex-shrink-0">{channel.icon}</span>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900 dark:text-white text-base">{channel.name}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">{channel.description}</p>
+                  <h4 className="font-semibold text-pure-black dark:text-pure-white text-base">{channel.name}</h4>
+                  <p className="text-sm text-pure-gray-600 dark:text-pure-gray-300 mt-2 leading-relaxed">{channel.description}</p>
                   <div className="flex items-center mt-3">
                     <div
                       className={`w-2 h-2 rounded-full mr-2 ${
                         isSelected ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600'
                       }`}
                     />
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-pure-gray-500 dark:text-pure-gray-400">
                       {isSelected ? 'Selected' : 'Not Selected'}
                     </span>
                   </div>

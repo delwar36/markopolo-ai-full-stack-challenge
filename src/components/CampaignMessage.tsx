@@ -203,15 +203,15 @@ ${jsonToDisplay}
 
   return (
     <div className="flex justify-start mb-4">
-      <div className="w-full max-w-xs sm:max-w-md lg:max-w-5xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 lg:p-6 shadow-sm">
+      <div className="w-full max-w-xs sm:max-w-md lg:max-w-5xl bg-white dark:bg-pure-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 lg:p-6 shadow-sm">
         <div className="flex items-center mb-4">
           <div className="flex items-center space-x-2">
             <span className="text-2xl">🤖</span>
             <span className="font-semibold text-gray-900 dark:text-white">Campaign Generator</span>
             {campaign.isStreaming && (
               <div className="flex items-center space-x-1 ml-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Generating...</span>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">Generating...</span>
               </div>
             )}
           </div>
@@ -312,7 +312,7 @@ ${jsonToDisplay}
                             {displayCode}
                           </SyntaxHighlighter>
                           {campaign.isStreaming && (
-                            <span className="absolute bottom-4 right-4 inline-block w-0.5 h-4 bg-blue-500 animate-pulse"></span>
+                            <span className="absolute bottom-4 right-4 inline-block w-0.5 h-4 bg-green-500 animate-pulse"></span>
                           )}
                         </div>
                       </div>
@@ -320,18 +320,18 @@ ${jsonToDisplay}
                   );
                 }
                 return (
-                  <code className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-xs font-mono">
+                  <code className="bg-pure-gray-100 dark:bg-pure-gray-700 text-pure-black dark:text-pure-white px-1.5 py-0.5 rounded text-xs font-mono">
                     {children}
                   </code>
                 );
               },
               pre: ({ children }) => (
-                <pre className="text-gray-100 p-4 overflow-x-auto text-xs bg-gray-900 rounded-lg">
+                <pre className="text-pure-white p-4 overflow-x-auto text-xs bg-pure-black rounded-lg">
                   {children}
                 </pre>
               ),
               hr: () => (
-                <hr className="border-gray-200 dark:border-gray-700 my-4" />
+                <hr className="border-pure-gray-300 dark:border-pure-gray-700 my-4" />
               ),
             }}
           >

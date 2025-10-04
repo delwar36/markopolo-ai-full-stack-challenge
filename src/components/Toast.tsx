@@ -81,11 +81,11 @@ export default function Toast({ id, type, title, message, duration = 5000, onClo
       case 'info':
       default:
         return {
-          bg: 'bg-blue-50 dark:bg-blue-900/20',
-          border: 'border-blue-200 dark:border-blue-800',
-          icon: 'text-blue-600 dark:text-blue-400',
-          title: 'text-blue-900 dark:text-blue-100',
-          message: 'text-blue-700 dark:text-blue-300',
+          bg: 'bg-green-50 dark:bg-green-900/20',
+          border: 'border-green-200 dark:border-green-800',
+          icon: 'text-green-600 dark:text-green-400',
+          title: 'text-green-900 dark:text-green-100',
+          message: 'text-green-700 dark:text-green-300',
           iconSvg: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

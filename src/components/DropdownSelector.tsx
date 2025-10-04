@@ -86,7 +86,7 @@ export default function DropdownSelector({
       {/* Add Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`${selectedItems.length > 0 ? type === 'dataSource' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700' : 'bg-transparent'} flex items-center space-x-2 px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300  rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600`}
+        className={`${selectedItems.length > 0 ? type === 'dataSource' ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700' : 'bg-transparent'} flex items-center space-x-2 px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300  rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600`}
       >
         <span className="text-lg">{getIcon()}</span>
         <span>{getButtonText()}</span>
@@ -107,9 +107,9 @@ export default function DropdownSelector({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute bottom-full left-0 mb-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute bottom-full left-0 mb-2 w-80 bg-pure-white dark:bg-pure-gray-800 border border-pure-gray-300 dark:border-pure-gray-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
           <div className="p-3">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+            <h3 className="text-sm font-semibold text-pure-black dark:text-pure-white mb-3">
               Select {getLabel()}
             </h3>
             <div className="space-y-2">
@@ -120,16 +120,16 @@ export default function DropdownSelector({
                     key={option.id}
                     onClick={() => handleOptionClick(option)}
                     className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${isSelected
-                      ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-pure-gray-100 dark:bg-pure-gray-800 border border-pure-gray-300 dark:border-pure-gray-600'
+                      : 'hover:bg-pure-gray-50 dark:hover:bg-pure-gray-700'
                       }`}
                   >
                     <span className="text-xl flex-shrink-0">{option.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h4 className="text-sm font-medium text-pure-black dark:text-pure-white">
                         {option.name}
                       </h4>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
+                      <p className="text-xs text-pure-gray-600 dark:text-pure-gray-300 mt-1 line-clamp-2">
                         {option.description}
                       </p>
                     </div>

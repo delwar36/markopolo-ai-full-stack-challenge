@@ -67,7 +67,7 @@ export default function DataSourceSelector({ onConnect, connectedSources }: Data
 
   return (
     <div className="p-2">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Data Sources</h3>
+      <h3 className="text-lg font-semibold text-pure-black dark:text-pure-white mb-6">Data Sources</h3>
       <div className="space-y-4">
         {availableDataSources.map((dataSource) => {
           const isConnected = getDataSourceStatus(dataSource.id);
@@ -85,15 +85,15 @@ export default function DataSourceSelector({ onConnect, connectedSources }: Data
               <div className="flex items-start space-x-4">
                 <span className="text-2xl flex-shrink-0">{dataSource.icon}</span>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900 dark:text-white text-base">{dataSource.name}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">{dataSource.description}</p>
+                  <h4 className="font-semibold text-pure-black dark:text-pure-white text-base">{dataSource.name}</h4>
+                  <p className="text-sm text-pure-gray-600 dark:text-pure-gray-300 mt-2 leading-relaxed">{dataSource.description}</p>
                   <div className="flex items-center mt-3">
                     <div
                       className={`w-2 h-2 rounded-full mr-2 ${
                         isConnected ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
                       }`}
                     />
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-pure-gray-500 dark:text-pure-gray-400">
                       {isConnected ? 'Connected' : 'Not Connected'}
                     </span>
                   </div>
