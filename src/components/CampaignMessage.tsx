@@ -20,7 +20,8 @@ export default function CampaignMessage({ campaign }: CampaignMessageProps) {
   const { theme } = useTheme();
 
   // Custom style that removes background highlighting
-  const getCustomStyle = (baseStyle: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getCustomStyle = (baseStyle: Record<string, any>) => {
     const customStyle = { ...baseStyle };
     // Remove background from all token types
     Object.keys(customStyle).forEach(key => {
@@ -38,7 +39,8 @@ export default function CampaignMessage({ campaign }: CampaignMessageProps) {
   const copyToClipboard = async () => {
     try {
       // Filter out streamingCode from the copied JSON
-      const { streamingCode, ...campaignWithoutStreamingCode } = campaign;
+      const campaignWithoutStreamingCode = { ...campaign };
+      delete campaignWithoutStreamingCode.streamingCode;
       await navigator.clipboard.writeText(JSON.stringify(campaignWithoutStreamingCode, null, 2));
       setCopied(true);
       showToast({
@@ -173,7 +175,10 @@ ${pendingTasks.join('\n')}`);
 
     // Always show JSON payload (streaming or complete)
     // Filter out streamingCode from the JSON output
-    const { streamingCode,streamingSections, isStreaming, ...campaignWithoutStreamingCode } = campaign;
+    const campaignWithoutStreamingCode = { ...campaign };
+    delete campaignWithoutStreamingCode.streamingCode;
+    delete campaignWithoutStreamingCode.streamingSections;
+    delete campaignWithoutStreamingCode.isStreaming;
     const jsonToDisplay = campaign.isStreaming && campaign.streamingCode 
       ? campaign.streamingCode 
       : JSON.stringify(campaignWithoutStreamingCode, null, 2);
@@ -189,7 +194,8 @@ ${jsonToDisplay}
 
   const getJsonPreview = (campaign: CampaignPayload) => {
     // Filter out streamingCode from the preview
-    const { streamingCode, ...campaignWithoutStreamingCode } = campaign;
+    const campaignWithoutStreamingCode = { ...campaign };
+    delete campaignWithoutStreamingCode.streamingCode;
     const jsonString = JSON.stringify(campaignWithoutStreamingCode, null, 2);
     const lines = jsonString.split('\n');
     return lines.slice(0, 3).join('\n') + (lines.length > 3 ? '\n  ...' : '');
@@ -253,19 +259,37 @@ ${jsonToDisplay}
                           <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                             JSON Payload {campaign.isStreaming ? '(Streaming)' : ''}
                           </span>
-                          <div className="flex space-x-3">
+                          <div className="flex space-x-2">
                             <button
                               onClick={copyToClipboard}
-                              className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-xs font-medium transition-colors text-gray-700 dark:text-gray-200"
+                              className="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                              title={copied ? 'Copied!' : 'Copy JSON'}
                             >
-                              {copied ? 'Copied!' : 'Copy'}
+                              {copied ? (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              )}
                             </button>
                             <button
                               onClick={(e) => handleExpand(e)}
-                              className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-xs font-medium transition-colors text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                              className="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                               tabIndex={0}
+                              title={isExpanded ? 'Collapse JSON' : 'Expand JSON'}
                             >
-                              {isExpanded ? 'Collapse' : 'Expand'}
+                              {isExpanded ? (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              )}
                             </button>
                           </div>
                         </div>

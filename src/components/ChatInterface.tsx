@@ -10,7 +10,6 @@ import ChannelConfigModal from './ChannelConfigModal';
 import Chip from './Chip';
 import { generateCampaignPayload, generateChatId } from '@/utils/campaignGenerator';
 import { useChat } from '@/contexts/ChatContext';
-import { Chat } from '@/contexts/ChatContext';
 
 interface EditableTitleProps {
   title: string;

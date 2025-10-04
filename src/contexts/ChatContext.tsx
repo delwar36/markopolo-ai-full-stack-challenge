@@ -265,7 +265,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setTempDataSources(prev => prev.filter(ds => ds.id !== dataSource.id));
   };
 
-  const addTempChannel = (channel: Channel, config?: ChannelConfig) => {
+  const addTempChannel = (channel: Channel, _config?: ChannelConfig) => {
     const isAlreadyAdded = tempChannels.some(ch => ch.id === channel.id);
     if (!isAlreadyAdded) {
       setTempChannels(prev => [...prev, { ...channel, enabled: true }]);
