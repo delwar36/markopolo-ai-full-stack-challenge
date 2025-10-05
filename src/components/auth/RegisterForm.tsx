@@ -40,7 +40,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     setIsLoading(true);
 
     try {
-      const result = await register(email, password, name);
+      const result: { success: boolean; error?: string; needsVerification?: boolean } = await register(email, password, name);
       
       if (result.success) {
         if (result.needsVerification) {
