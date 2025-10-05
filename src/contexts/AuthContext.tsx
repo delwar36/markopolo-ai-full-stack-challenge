@@ -24,6 +24,7 @@ interface AuthContextType {
   register: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateProfile: (updates: { name?: string; email?: string }) => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +38,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if user is authenticated on mount
   useEffect(() => {
     checkAuthStatus();
+  }, []);
+
+  // Listen for auth state changes from Supabase
+  useEffect(() => {
+    const handleAuthStateChange = async (event: string, session: any) => {
+      if (event === 'SIGNED_IN' && session) {
+        setSession(session);
+        localStorage.setItem('supabase_session', JSON.stringify(session));
+        
+        // Get user data from API
+        try {
+          const response = await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setSession(null);
+        localStorage.removeItem('supabase_session');
+      }
+    };
+
+    // Listen for auth state changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'supabase_session') {
+        if (e.newValue) {
+          const sessionData = JSON.parse(e.newValue);
+          handleAuthStateChange('SIGNED_IN', sessionData);
+        } else {
+          handleAuthStateChange('SIGNED_OUT', null);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const checkAuthStatus = async () => {
@@ -95,6 +144,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (data.session) {
           setSession(data.session);
           localStorage.setItem('supabase_session', JSON.stringify(data.session));
+          
+          // Trigger storage event to ensure state is updated
+          window.dispatchEvent(new StorageEvent('storage', {
+            key: 'supabase_session',
+            newValue: JSON.stringify(data.session),
+            storageArea: localStorage,
+          }));
         }
         return { success: true };
       } else {
@@ -184,6 +240,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Redirect to Google OAuth URL
+        window.location.href = data.url;
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || 'Google sign in failed' };
+      }
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -193,6 +277,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         updateProfile,
+        signInWithGoogle,
       }}
     >
       {children}
