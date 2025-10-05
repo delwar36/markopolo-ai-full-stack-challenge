@@ -15,7 +15,7 @@ async function main() {
     },
   })
 
-  console.log('✅ Created user:', user.email)
+  console.log('Created user:', user.email)
 
   // Create sample campaigns
   const campaign1 = await prisma.campaign.create({
@@ -40,7 +40,7 @@ async function main() {
     },
   })
 
-  console.log('✅ Created campaigns:', campaign1.title, campaign2.title)
+  console.log('Created campaigns:', campaign1.title, campaign2.title)
 
   // Create sample messages
   const messages = [
@@ -76,9 +76,9 @@ async function main() {
     })
   }
 
-  console.log('✅ Created', messages.length, 'sample messages')
+  console.log('Created', messages.length, 'sample messages')
 
-  console.log('🎉 Database seeding completed!')
+  console.log('Database seeding completed!')
 }
 
 main()

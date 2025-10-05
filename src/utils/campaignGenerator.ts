@@ -91,11 +91,11 @@ function generateContent(channels: Channel[]): {
   };
 
   if (channels.some(ch => ch.id === 'email')) {
-    baseContent.subject = "🎉 Exclusive Offer Just for You!";
+    baseContent.subject = "Exclusive Offer Just for You!";
   }
 
   if (channels.some(ch => ch.id === 'whatsapp')) {
-    baseContent.body = "Hi! 👋 We have something special for you. Check out our latest deals!";
+    baseContent.body = "Hi! We have something special for you. Check out our latest deals!";
   }
 
   if (channels.some(ch => ch.id === 'sms')) {

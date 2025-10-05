@@ -114,10 +114,10 @@ export default function CampaignMessage({ campaign }: CampaignMessageProps) {
     const sections = [];
     const strSections = campaign.streamingSections || [];
     
-    sections.push(`## 🎯 Campaign Generated Successfully!`);
+    sections.push(`## Campaign Generated Successfully!`);
     
     // Always show summary
-    sections.push(`### 📊 Campaign Summary
+    sections.push(`### Campaign Summary
 - **Name**: ${campaign.name}
 - **Channels**: ${campaign.channels.join(', ')}
 - **Data Sources**: ${campaign.dataSources.join(', ')}
@@ -146,7 +146,7 @@ ${campaign.content.cta ? `- **Call-to-Action**: ${campaign.content.cta}` : ''}`)
     }
 
     if (strSections.includes('budget') || !campaign.isStreaming) {
-      sections.push(`### 💰 Budget Allocation
+      sections.push(`### Budget Allocation
 - **Total Budget**: $${campaign.budget?.total.toLocaleString() || 'N/A'}
 ${campaign.budget?.perChannel ? Object.entries(campaign.budget.perChannel).map(([channel, amount]) => `- **${channel}**: $${amount.toLocaleString()}`).join('\n') : ''}`);
     }
@@ -161,11 +161,11 @@ ${campaign.budget?.perChannel ? Object.entries(campaign.budget.perChannel).map((
     // Add loading indicator if still streaming
     if (campaign.isStreaming) {
       const pendingTasks = [];
-      if (!strSections.includes('audience')) pendingTasks.push('- 🔍 Analyzing audience segments...');
-      if (!strSections.includes('timing')) pendingTasks.push('- ⏱️ Optimizing timing strategy...');
-      if (!strSections.includes('content')) pendingTasks.push('- ✍️ Crafting personalized content...');
-      if (!strSections.includes('budget')) pendingTasks.push('- 💰 Calculating budget allocation...');
-      if (!strSections.includes('metrics')) pendingTasks.push('- 📊 Computing performance metrics...');
+      if (!strSections.includes('audience')) pendingTasks.push('- Analyzing audience segments...');
+      if (!strSections.includes('timing')) pendingTasks.push('- Optimizing timing strategy...');
+      if (!strSections.includes('content')) pendingTasks.push('- Crafting personalized content...');
+      if (!strSections.includes('budget')) pendingTasks.push('- Calculating budget allocation...');
+      if (!strSections.includes('metrics')) pendingTasks.push('- Computing performance metrics...');
       
       if (pendingTasks.length > 0) {
         sections.push(`### 🔄 Generating...
@@ -184,7 +184,7 @@ ${pendingTasks.join('\n')}`);
       : JSON.stringify(campaignWithoutStreamingCode, null, 2);
     
     sections.push(`---
-### 🔧 Raw JSON Payload
+### Raw JSON Payload
 \`\`\`json
 ${jsonToDisplay}
 \`\`\``);
