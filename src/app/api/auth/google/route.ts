@@ -6,7 +6,7 @@ export async function POST() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `https://markopolo-ai.delwar.site/auth/callback`,
+        redirectTo: `${process.env.NEXTAUTH_URL}/auth/callback`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
