@@ -32,7 +32,7 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       } else {
         setError(result.error || 'Login failed');
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
@@ -100,7 +100,7 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
         {onSwitchToRegister && (
           <div className="mt-6 text-center">
             <p className="text-gray-600 dark:text-gray-400">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <button
                 type="button"
                 onClick={onSwitchToRegister}

@@ -1,14 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-
 interface EmailVerificationSuccessProps {
   email: string;
   onGoToLogin: () => void;
 }
 
 export default function EmailVerificationSuccess({ email, onGoToLogin }: EmailVerificationSuccessProps) {
-  const router = useRouter();
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -25,7 +22,7 @@ export default function EmailVerificationSuccess({ email, onGoToLogin }: EmailVe
             Check Your Email
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            We've sent a verification link to
+            We&apos;ve sent a verification link to
           </p>
           <p className="text-blue-600 dark:text-blue-400 font-medium">
             {email}
@@ -66,7 +63,7 @@ export default function EmailVerificationSuccess({ email, onGoToLogin }: EmailVe
           
           <div className="text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Didn't receive the email?{' '}
+              Didn&apos;t receive the email?{' '}
               <button
                 type="button"
                 className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
