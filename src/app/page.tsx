@@ -6,12 +6,10 @@ import Header from '@/components/layout/Header';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useChat } from '@/contexts/ChatContext';
-import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { chats } = useChat();
-  const { user } = useAuth();
   const searchParams = useSearchParams();
 
   useEffect(() => {

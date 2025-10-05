@@ -53,7 +53,7 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       } else {
         setError(result.error || 'Google sign in failed');
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

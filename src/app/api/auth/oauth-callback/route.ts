@@ -13,12 +13,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create a session object to get user info from Supabase
-    const session = {
-      access_token,
-      refresh_token,
-      expires_at,
-    }
+    // Note: We don't need to create a session object here as we use the access token directly
 
     // Get user info from Supabase using the access token
     const { data: userData, error: userError } = await supabase.auth.getUser(access_token)

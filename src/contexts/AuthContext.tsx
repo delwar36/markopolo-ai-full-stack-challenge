@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 interface User {
   id: string;
@@ -31,9 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   // Check if user is authenticated on mount
   useEffect(() => {
@@ -42,9 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for auth state changes from Supabase
   useEffect(() => {
-    const handleAuthStateChange = async (event: string, session: any) => {
+    const handleAuthStateChange = async (event: string, session: Session | null) => {
       if (event === 'SIGNED_IN' && session) {
-        setSession(session);
         localStorage.setItem('supabase_session', JSON.stringify(session));
         
         // Get user data from API
@@ -64,7 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
-        setSession(null);
         localStorage.removeItem('supabase_session');
       }
     };
@@ -94,7 +89,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedSession = localStorage.getItem('supabase_session');
       if (storedSession) {
         const sessionData = JSON.parse(storedSession);
-        setSession(sessionData);
         
         // Verify session with API
         const response = await fetch('/api/auth/me', {
@@ -109,7 +103,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           // Session invalid, clear it
           localStorage.removeItem('supabase_session');
-          setSession(null);
           setUser(null);
         }
       } else {
@@ -118,7 +111,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error checking auth status:', error);
       localStorage.removeItem('supabase_session');
-      setSession(null);
       setUser(null);
     } finally {
       setLoading(false);
@@ -142,7 +134,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         setUser(data.user);
         if (data.session) {
-          setSession(data.session);
           localStorage.setItem('supabase_session', JSON.stringify(data.session));
           
           // Trigger storage event to ensure state is updated
@@ -185,7 +176,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setUser(data.user);
           if (data.session) {
-            setSession(data.session);
             localStorage.setItem('supabase_session', JSON.stringify(data.session));
           }
           return { success: true };
@@ -210,7 +200,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
-      setSession(null);
       localStorage.removeItem('supabase_session');
       // Don't redirect to login, just stay on the current page
     }

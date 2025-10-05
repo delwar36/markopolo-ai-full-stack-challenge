@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 
 export default function AuthCallback() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -108,8 +107,6 @@ export default function AuthCallback() {
         setTimeout(() => {
           router.push('/auth/login?error=callback_failed');
         }, 2000);
-      } finally {
-        setLoading(false);
       }
     };
 

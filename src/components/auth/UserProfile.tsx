@@ -9,7 +9,7 @@ interface UserProfileProps {
 }
 
 export default function UserProfile({ isCollapsed = false }: UserProfileProps) {
-  const { user, logout, login } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
 

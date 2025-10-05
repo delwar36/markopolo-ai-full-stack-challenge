@@ -56,7 +56,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       } else {
         setError(result.error || 'Registration failed');
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
