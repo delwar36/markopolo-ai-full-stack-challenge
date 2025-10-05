@@ -3,7 +3,7 @@
 import { useChat } from '@/contexts/ChatContext';
 import { useState } from 'react';
 import Image from 'next/image';
-import ThemeToggle from '../ui/ThemeToggle';
+import UserProfile from '../auth/UserProfile';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -264,22 +264,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
          {/* Footer */}
          <div className="p-4 border-t border-pure-gray-300 dark:border-pure-gray-700 bg-pure-white dark:bg-pure-black">
-             {(isHovered || isOpen || isPinned) ? (
-               /* Expanded view - show chat count and theme toggle */
-               <div className="space-y-3">
-                 <div className="text-xs text-pure-gray-500 dark:text-pure-gray-400 text-center">
-                   {chats.length} chat{chats.length !== 1 ? 's' : ''} total
-                 </div>
-                 <div className="flex justify-center">
-                   <ThemeToggle showTitle={true} />
-                 </div>
-               </div>
-             ) : (
-               /* Collapsed view - just show theme toggle */
-               <div className="flex justify-center">
-                 <ThemeToggle />
-               </div>
-             )}
+             <div className="space-y-3">
+               {/* User Profile */}
+               <UserProfile isCollapsed={!(isHovered || isOpen || isPinned)} />
+               
+           
+             </div>
          </div>
        </div>
 
