@@ -3,12 +3,11 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Message, DataSource, Channel, DataSourceConfig, ChannelConfig } from '@/types';
 import MessageBubble from '../chat/MessageBubble';
-import CampaignMessage from '../sections/CampaignMessage';
 import DropdownSelector from '../selectors/DropdownSelector';
 import DataSourceConfigModal from '../forms/DataSourceConfigModal';
 import ChannelConfigModal from '../forms/ChannelConfigModal';
 import Chip from '../ui/Chip';
-import { generateCampaignPayload, generateChatId } from '@/utils/campaignGenerator';
+import { generateChatId } from '@/utils/campaignGenerator';
 import { useChat } from '@/contexts/ChatContext';
 import { useToast } from '../ui/ToastContainer';
 
@@ -166,8 +165,6 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     addMessage,
     updateMessage,
     updateChat,
-    setCampaignOutput,
-    updateCampaignOutput,
     connectDataSource,
     removeDataSource,
     selectChannel,
@@ -191,7 +188,6 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
 
   // Get current chat data
   const messages = useMemo(() => currentChat?.messages || [], [currentChat?.messages]);
-  const campaignOutput = currentChat?.campaignOutput || null;
   const connectedDataSources = useMemo(() => {
     return currentChat?.connectedDataSources || tempDataSources;
   }, [currentChat?.connectedDataSources, tempDataSources]);
@@ -205,97 +201,12 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     }, 100);
   };
 
-  // Helper function to simulate streaming text word by word
-  const streamText = async (chatId: string, messageId: string, fullText: string) => {
-    // Split text into words for word-by-word streaming
-    const words = fullText.split(/\s+/).filter(word => word.trim());
-    let currentText = '';
-
-    for (let i = 0; i < words.length; i++) {
-      currentText += (i > 0 ? ' ' : '') + words[i];
-
-      // Update the message with current text
-      updateMessage(chatId, messageId, {
-        content: currentText,
-        isStreaming: i < words.length - 1
-      });
-
-      // Scroll to bottom to follow the streaming text
-      scrollToBottom();
-
-      // Wait between words (longer pause for punctuation, shorter for regular words)
-      const delay = words[i].endsWith('.') || words[i].endsWith('!') || words[i].endsWith('?') || words[i].endsWith(',')
-        ? Math.random() * 200 + 150  // 150-350ms for punctuation
-        : Math.random() * 100 + 50; // 50-150ms for regular words
-
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-
-    // Mark streaming as complete
-    updateMessage(chatId, messageId, {
-      isStreaming: false
-    });
-  };
-
-  // Helper function to stream campaign generation with code streaming
-  const streamCampaignGeneration = async (chatId: string, dataSources: DataSource[], channels: Channel[]) => {
-    // Create initial campaign structure
-    const campaign = await generateCampaignPayload(dataSources, channels);
-
-    // Set initial campaign with streaming flag and empty content
-    setCampaignOutput(chatId, {
-      ...campaign,
-      isStreaming: true,
-      streamingSections: [],
-      streamingCode: ''
-    });
-
-    // Convert campaign to JSON string for streaming
-    const campaignJson = JSON.stringify(campaign, null, 2);
-    const jsonLines = campaignJson.split('\n');
-    
-    // Stream the JSON code line by line
-    let currentCode = '';
-    for (let i = 0; i < jsonLines.length; i++) {
-      currentCode += (i > 0 ? '\n' : '') + jsonLines[i];
-      
-      // Update campaign with current streaming code
-      updateCampaignOutput(chatId, {
-        streamingCode: currentCode
-      });
-
-      // Scroll to bottom to follow the code streaming
-      scrollToBottom();
-
-      // Wait between lines (faster for code streaming)
-      const delay = jsonLines[i].includes('{') || jsonLines[i].includes('}') || jsonLines[i].includes('[') || jsonLines[i].includes(']')
-        ? Math.random() * 100 + 50  // 50-150ms for structural elements
-        : Math.random() * 80 + 30; // 30-110ms for regular lines
-
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-
-    // Mark streaming as complete
-    updateCampaignOutput(chatId, {
-      isStreaming: false,
-      streamingCode: campaignJson
-    });
-
-    // Show success toast when campaign generation is complete
-    showToast({
-      type: 'success',
-      title: 'Campaign Generated!',
-      message: 'Your campaign strategy is ready. Click "Run Campaign" to execute it.',
-      duration: 4000,
-    });
-  };
-
   useEffect(() => {
-    // Only scroll when there are messages or campaign output
-    if (messages.length > 0 || campaignOutput) {
+    // Only scroll when there are messages
+    if (messages.length > 0) {
       scrollToBottom();
     }
-  }, [messages, campaignOutput]);
+  }, [messages]);
 
   // Handle clicking outside options popup
   useEffect(() => {
@@ -349,57 +260,96 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
     setInputValue("");
     setIsLoading(true);
 
-    // Check if we should generate a campaign
-    const shouldGenerateCampaign =
-      connectedDataSources.length > 0 && selectedChannels.length > 0;
+    // Create initial assistant message
+    const assistantMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      content: "",
+      role: "assistant",
+      timestamp: new Date(),
+      isStreaming: true,
+    };
+    addMessage(chatId, assistantMessage);
 
-    if (shouldGenerateCampaign) {
-      // Create initial assistant message
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "",
-        role: "assistant",
-        timestamp: new Date(),
-        isStreaming: true,
-      };
-      addMessage(chatId, assistantMessage);
+    try {
+      // Get current chat to access full message history
+      const chat = chats.find(c => c.id === chatId);
+      const messageHistory = chat ? chat.messages : [];
 
-      // Start streaming response for campaign generation
-      const campaignResponses = [
-        "Perfect! I can see you've connected your data sources and selected your channels. Now I'm generating your targeted campaign.",
-        "I'm analyzing your audience segments from your connected data sources to understand their behavior patterns and preferences.",
-        "Based on your selected channels, I'm optimizing the content and timing for each platform to maximize engagement.",        
-        "Almost done! I'm finalizing the campaign strategy with personalized messaging and expected performance metrics."
-      ];
+      // Call OpenAI API with streaming
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [
+            ...messageHistory.map(msg => ({
+              role: msg.role,
+              content: msg.content,
+            })),
+            { role: 'user', content: messageContent },
+          ],
+          dataSources: connectedDataSources.map(ds => ({ id: ds.id, name: ds.name })),
+          channels: selectedChannels.map(ch => ({ id: ch.id, name: ch.name })),
+        }),
+      });
 
-      const fullResponse = campaignResponses.join(" ");
-      await streamText(chatId, assistantMessage.id, fullResponse);
+      if (!response.ok) {
+        throw new Error('Failed to get response from AI');
+      }
 
-      // Stream campaign generation after message streaming is complete
-      await streamCampaignGeneration(chatId, connectedDataSources, selectedChannels);
-      setIsLoading(false);
-    } else {
-      // Create initial assistant message
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "",
-        role: "assistant",
-        timestamp: new Date(),
-        isStreaming: true,
-      };
-      addMessage(chatId, assistantMessage);
+      // Read the stream
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let isFirstChunk = true;
 
-      // Start streaming response with more engaging content
-      const responses = [
-        "I'll help you create a targeted campaign that drives real results. Let me guide you through the process step by step.",
-        "First, you'll need to connect your data sources like Google Tag Manager, Facebook Pixel, or Google Ads to understand your audience behavior.",
-        "Then, select the channels where you want to reach your audience - Email, SMS, Push Notifications, or WhatsApp.",
-        "Once you've connected your data and chosen your channels, I'll analyze your audience segments and generate a comprehensive campaign strategy tailored to your specific needs.",
-        "This will include personalized content, optimal timing, budget allocation, and expected performance metrics for each channel."
-      ];
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-      const fullResponse = responses.join(" ");
-      await streamText(chatId, assistantMessage.id, fullResponse);
+          const chunk = decoder.decode(value, { stream: true });
+          fullText += chunk;
+
+          // Hide "AI Thinking" indicator when first chunk arrives
+          if (isFirstChunk) {
+            setIsLoading(false);
+            isFirstChunk = false;
+          }
+
+          // Update message with accumulated text
+          updateMessage(chatId, assistantMessage.id, {
+            content: fullText,
+            isStreaming: true,
+          });
+
+          // Scroll to bottom
+          scrollToBottom();
+        }
+      }
+
+      // Mark streaming as complete
+      updateMessage(chatId, assistantMessage.id, {
+        content: fullText,
+        isStreaming: false,
+      });
+    } catch (error) {
+      console.error('Error processing message:', error);
+      
+      // Update message with error
+      updateMessage(chatId, assistantMessage.id, {
+        content: "I'm sorry, I encountered an error while processing your request. Please make sure your OpenAI API key is configured correctly and try again.",
+        isStreaming: false,
+      });
+
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to get AI response. Please check your API configuration.',
+        duration: 4000,
+      });
+
       setIsLoading(false);
     }
   };
@@ -753,17 +703,16 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
             <MessageBubble key={message.id} message={message} />
           ))}
 
-          {campaignOutput && (
-            <CampaignMessage campaign={campaignOutput} />
-          )}
-
           {isLoading && (
             <div className="flex justify-start mb-4">
-              <div className="bg-pure-white dark:bg-pure-gray-800 border border-pure-gray-300 dark:border-pure-gray-700 rounded-xl p-5 max-w-xs shadow-sm">
-                <div className="flex space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="bg-pure-white dark:bg-pure-gray-800 border border-pure-gray-300 dark:border-pure-gray-700 rounded-xl px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex space-x-1.5">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                  <span className="text-sm text-pure-gray-600 dark:text-pure-gray-400">AI Thinking...</span>
                 </div>
               </div>
             </div>

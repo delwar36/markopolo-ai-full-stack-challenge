@@ -22,21 +22,87 @@ A modern chat interface similar to Perplexity that allows users to connect to va
 - **Next.js 15** - React framework with App Router
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first CSS framework
+- **OpenAI API** - AI-powered chat responses
+- **Prisma** - Type-safe database ORM
+- **Supabase** - Backend and authentication
 - **React Hooks** - State management and side effects
 
 ## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ installed
+- An OpenAI API account ([sign up here](https://platform.openai.com))
+- A Supabase account ([sign up here](https://supabase.com))
+- PostgreSQL database (or use Supabase's built-in PostgreSQL)
+
+### Setup Instructions
 
 1. **Install Dependencies**
    ```bash
    npm install
    ```
 
-2. **Start Development Server**
+2. **Configure Environment Variables**
+   
+   Create a `.env.local` file in the project root with the following variables:
+   
+   ```env
+   # Database
+   DATABASE_URL="postgresql://user:password@localhost:5432/markopolo_chats"
+   DIRECT_URL="postgresql://user:password@localhost:5432/markopolo_chats"
+   
+   # Supabase
+   NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+   SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+   
+   # OpenAI
+   OPENAI_API_KEY="sk-your-openai-api-key"
+   
+   # App
+   NEXT_PUBLIC_APP_URL="http://localhost:3000"
+   ```
+   
+   **Getting Your API Keys:**
+   
+   - **OpenAI API Key**: 
+     - Go to [OpenAI Platform](https://platform.openai.com)
+     - Navigate to API Keys section
+     - Create a new secret key
+     - Copy it to `OPENAI_API_KEY`
+   
+   - **Supabase Credentials**: 
+     - Go to your [Supabase Dashboard](https://app.supabase.com)
+     - Select your project (or create a new one)
+     - Go to Settings > API
+     - Copy the `Project URL` to `NEXT_PUBLIC_SUPABASE_URL`
+     - Copy the `anon` `public` key to `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+     - Copy the `service_role` `secret` key to `SUPABASE_SERVICE_ROLE_KEY`
+   
+   - **Database Credentials**:
+     - If using Supabase's database: Go to Settings > Database > Connection String
+     - Copy the connection string (with password) to both `DATABASE_URL` and `DIRECT_URL`
+     - Or use your own PostgreSQL database connection string
+
+3. **Set Up Database**
+   ```bash
+   # Generate Prisma client
+   npx prisma generate
+   
+   # Run database migrations
+   npx prisma db push
+   
+   # Optional: Seed the database
+   npx prisma db seed
+   ```
+
+4. **Start Development Server**
    ```bash
    npm run dev
    ```
 
-3. **Open in Browser**
+5. **Open in Browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## Usage
