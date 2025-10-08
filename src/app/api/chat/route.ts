@@ -15,7 +15,7 @@ interface ChatMessage {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, dataSources, channels } = await req.json()
+    const { messages, dataSources, channels, model = 'gpt-4o-mini' } = await req.json()
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     // Create chat completion with streaming
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: model as 'gpt-4o-mini' | 'gpt-4o' | 'gpt-4-turbo' | 'gpt-3.5-turbo',
       messages: [
         { role: 'system', content: systemPrompt },
         ...messages.map((msg: ChatMessage) => ({

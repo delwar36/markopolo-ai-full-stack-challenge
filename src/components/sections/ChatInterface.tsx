@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Message, DataSource, Channel, DataSourceConfig, ChannelConfig } from '@/types';
 import MessageBubble from '../chat/MessageBubble';
 import DropdownSelector from '../selectors/DropdownSelector';
+import ModelSelector from '../selectors/ModelSelector';
 import DataSourceConfigModal from '../forms/DataSourceConfigModal';
 import ChannelConfigModal from '../forms/ChannelConfigModal';
 import Chip from '../ui/Chip';
@@ -183,6 +184,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
   const [selectedDataSource, setSelectedDataSource] = useState<DataSource | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [showOptionsPopup, setShowOptionsPopup] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
 
@@ -291,6 +293,7 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
           ],
           dataSources: connectedDataSources.map(ds => ({ id: ds.id, name: ds.name })),
           channels: selectedChannels.map(ch => ({ id: ch.id, name: ch.name })),
+          model: selectedModel,
         }),
       });
 
@@ -492,6 +495,13 @@ export default function ChatInterface({ onSidebarToggle }: ChatInterfaceProps) {
                   Markopolo AI
                 </h1>
               )}
+              {/* Model Selector */}
+              <div className="mt-2">
+                <ModelSelector
+                  selectedModel={selectedModel}
+                  onModelChange={setSelectedModel}
+                />
+              </div>
             </div>
           </div>
         </div>
