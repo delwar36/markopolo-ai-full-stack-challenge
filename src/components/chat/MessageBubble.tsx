@@ -23,7 +23,14 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
   }, [message.content]);
 
   // Extract campaign data from JSON
-  const [campaignData, setCampaignData] = useState<any>(null);
+  const [campaignData, setCampaignData] = useState<{
+    id?: string;
+    name?: string;
+    channels?: unknown[];
+    dataSources?: unknown[];
+    budget?: { total?: number };
+    metrics?: { expectedReach?: number; expectedConversion?: number };
+  } | null>(null);
   
   useEffect(() => {
     if (!isUser && !message.isStreaming && displayText.includes('```json')) {
@@ -58,8 +65,6 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
     }
   }, [displayText, isUser, message.isStreaming]);
 
-  // Check if message contains campaign JSON
-  const hasCampaignJSON = campaignData !== null;
 
   const handleLaunchCampaign = async () => {
     setIsLaunching(true);
