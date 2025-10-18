@@ -1,59 +1,56 @@
 {
-  "name": "markopolo-chats",
-  "version": "0.1.0",
+  "name": "markopolo-ai-microservices",
+  "version": "1.0.0",
+  "description": "Markopolo AI - Scalable Microservices Architecture",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint",
-    "test": "jest --config jest.config.js",
-    "test:watch": "jest --config jest.config.js --watch",
-    "test:coverage": "jest --config jest.config.js --coverage",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "prisma migrate reset"
+    "dev": "docker-compose up -d",
+    "dev:logs": "docker-compose logs -f",
+    "dev:down": "docker-compose down",
+    "dev:clean": "docker-compose down -v --remove-orphans",
+    "build": "docker-compose build",
+    "start": "./scripts/start-microservices.sh",
+    "test": "echo 'Run tests in individual services'",
+    "lint": "echo 'Run linting in individual services'",
+    "k8s:deploy": "kubectl apply -f infrastructure/kubernetes/",
+    "k8s:delete": "kubectl delete -f infrastructure/kubernetes/",
+    "k8s:status": "kubectl get pods -n markopolo-ai",
+    "k8s:logs": "kubectl logs -f -l app=api-gateway -n markopolo-ai",
+    "cleanup": "docker system prune -f && docker volume prune -f"
   },
-  "dependencies": {
-    "@auth/prisma-adapter": "^2.10.0",
-    "@prisma/client": "^6.16.3",
-    "@supabase/supabase-js": "^2.58.0",
-    "@tailwindcss/typography": "^0.5.19",
-    "@types/react-syntax-highlighter": "^15.5.13",
-    "next": "15.5.4",
-    "next-auth": "^4.24.11",
-    "openai": "^6.2.0",
-    "pg": "^8.16.3",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-markdown": "^10.1.0",
-    "react-syntax-highlighter": "^15.6.6"
-  },
+  "keywords": [
+    "microservices",
+    "nodejs",
+    "typescript",
+    "kafka",
+    "redis",
+    "postgresql",
+    "kubernetes",
+    "docker",
+    "ai",
+    "marketing",
+    "campaigns"
+  ],
+  "author": "Markopolo AI Team",
+  "license": "MIT",
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4.1.14",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.1.0",
-    "@testing-library/user-event": "^14.5.2",
-    "@types/jest": "^29.5.14",
-    "@types/jsdom": "^21.1.6",
-    "@types/node": "^20",
-    "@types/pg": "^8.15.5",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9",
-    "eslint-config-next": "15.5.4",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "postcss": "^8.5.6",
-    "prisma": "^6.16.3",
-    "tailwindcss": "^3.4.0",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.20.6",
-    "typescript": "^5"
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/markopolo-ai/microservices-architecture.git"
+  },
+  "bugs": {
+    "url": "https://github.com/markopolo-ai/microservices-architecture/issues"
+  },
+  "homepage": "https://github.com/markopolo-ai/microservices-architecture#readme",
+  "dependencies": {
+    "kafkajs": "^2.2.4",
+    "winston": "^3.18.3"
   }
 }

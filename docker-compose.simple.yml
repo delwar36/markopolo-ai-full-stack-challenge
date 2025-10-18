@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # Simplified infrastructure with lighter images
+  redis:
+    image: redis:7-alpine
+    hostname: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - markopolo-network
+
+  postgres-auth:
+    image: postgres:15-alpine
+    hostname: postgres-auth
+    container_name: postgres-auth
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: markopolo_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: markopolo123
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    networks:
+      - markopolo-network
+
+  postgres-users:
+    image: postgres:15-alpine
+    hostname: postgres-users
+    container_name: postgres-users
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: markopolo_users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: markopolo123
+    volumes:
+      - postgres-users-data:/var/lib/postgresql/data
+    networks:
+      - markopolo-network
+
+  # Simple Node.js services for testing
+  api-gateway:
+    image: node:18-alpine
+    hostname: api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    working_dir: /app
+    command: sh -c "npm install express cors helmet && node -e 'const express=require(\"express\");const app=express();app.use(express.json());app.get(\"/health\",(req,res)=>res.json({service:\"api-gateway\",status:\"healthy\"}));app.listen(3000,()=>console.log(\"API Gateway running on port 3000\"));'"
+    networks:
+      - markopolo-network
+
+  auth-service:
+    image: node:18-alpine
+    hostname: auth-service
+    container_name: auth-service
+    ports:
+      - "3001:3001"
+    working_dir: /app
+    command: sh -c "npm install express cors helmet && node -e 'const express=require(\"express\");const app=express();app.use(express.json());app.get(\"/health\",(req,res)=>res.json({service:\"auth-service\",status:\"healthy\"}));app.listen(3001,()=>console.log(\"Auth Service running on port 3001\"));'"
+    networks:
+      - markopolo-network
+
+volumes:
+  redis-data:
+  postgres-auth-data:
+  postgres-users-data:
+
+networks:
+  markopolo-network:
+    driver: bridge
+
+
+

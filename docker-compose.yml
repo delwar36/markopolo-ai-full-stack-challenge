@@ -1,0 +1,504 @@
+services:
+  # Infrastructure Services
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+    networks:
+      - markopolo-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - markopolo-network
+
+  redis:
+    image: redis:7.2-alpine
+    hostname: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-markopolo123}
+    volumes:
+      - redis-data:/data
+    networks:
+      - markopolo-network
+
+  # Databases
+  postgres-auth:
+    image: postgres:15-alpine
+    hostname: postgres-auth
+    container_name: postgres-auth
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: markopolo_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+      - ./microservices/auth-service/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - markopolo-network
+
+  postgres-users:
+    image: postgres:15-alpine
+    hostname: postgres-users
+    container_name: postgres-users
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: markopolo_users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+    volumes:
+      - postgres-users-data:/var/lib/postgresql/data
+    networks:
+      - markopolo-network
+
+  postgres-campaigns:
+    image: postgres:15-alpine
+    hostname: postgres-campaigns
+    container_name: postgres-campaigns
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: markopolo_campaigns
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+    volumes:
+      - postgres-campaigns-data:/var/lib/postgresql/data
+    networks:
+      - markopolo-network
+
+  postgres-chat:
+    image: postgres:15-alpine
+    hostname: postgres-chat
+    container_name: postgres-chat
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: markopolo_chat
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+    volumes:
+      - postgres-chat-data:/var/lib/postgresql/data
+    networks:
+      - markopolo-network
+
+  postgres-ai:
+    image: postgres:15-alpine
+    hostname: postgres-ai
+    container_name: postgres-ai
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_DB: markopolo_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+    volumes:
+      - postgres-ai-data:/var/lib/postgresql/data
+    networks:
+      - markopolo-network
+
+  postgres-notifications:
+    image: postgres:15-alpine
+    hostname: postgres-notifications
+    container_name: postgres-notifications
+    ports:
+      - "5437:5432"
+    environment:
+      POSTGRES_DB: markopolo_notifications
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+    volumes:
+      - postgres-notifications-data:/var/lib/postgresql/data
+    networks:
+      - markopolo-network
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.8-alpine
+    hostname: clickhouse
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      CLICKHOUSE_DB: markopolo_analytics
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-markopolo123}
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    networks:
+      - markopolo-network
+
+  # MinIO for file storage
+  minio:
+    image: minio/minio:latest
+    hostname: minio
+    container_name: minio
+    ports:
+      - "9001:9000"
+      - "9002:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - markopolo-network
+
+  # Microservices
+  api-gateway:
+    build:
+      context: ./microservices/api-gateway
+      dockerfile: Dockerfile
+    hostname: api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-markopolo123}
+      REDIS_DB: 0
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      USER_SERVICE_URL: http://user-service:3002
+      CAMPAIGN_SERVICE_URL: http://campaign-service:3003
+      CHAT_SERVICE_URL: http://chat-service:3004
+      AI_SERVICE_URL: http://ai-service:3005
+      NOTIFICATION_SERVICE_URL: http://notification-service:3006
+      ANALYTICS_SERVICE_URL: http://analytics-service:3007
+      FILE_SERVICE_URL: http://file-service:3008
+    depends_on:
+      - redis
+      - kafka
+    networks:
+      - markopolo-network
+
+  auth-service:
+    build:
+      context: ./microservices/auth-service
+      dockerfile: Dockerfile
+    hostname: auth-service
+    container_name: auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      AUTH_DB_HOST: postgres-auth
+      AUTH_DB_PORT: 5432
+      AUTH_DB_NAME: markopolo_auth
+      AUTH_DB_USER: postgres
+      AUTH_DB_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+      AUTH_DB_SSL: false
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-markopolo123}
+      REDIS_DB: 1
+      KAFKA_BROKERS: kafka:29092
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRES_IN: 24h
+    depends_on:
+      - postgres-auth
+      - redis
+      - kafka
+    networks:
+      - markopolo-network
+
+  user-service:
+    build:
+      context: ./microservices/user-service
+      dockerfile: Dockerfile
+    hostname: user-service
+    container_name: user-service
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      USER_DB_HOST: postgres-users
+      USER_DB_PORT: 5432
+      USER_DB_NAME: markopolo_users
+      USER_DB_USER: postgres
+      USER_DB_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-markopolo123}
+      REDIS_DB: 2
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      - postgres-users
+      - redis
+      - kafka
+    networks:
+      - markopolo-network
+
+  campaign-service:
+    build:
+      context: ./microservices/campaign-service
+      dockerfile: Dockerfile
+    hostname: campaign-service
+    container_name: campaign-service
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      CAMPAIGN_DB_HOST: postgres-campaigns
+      CAMPAIGN_DB_PORT: 5432
+      CAMPAIGN_DB_NAME: markopolo_campaigns
+      CAMPAIGN_DB_USER: postgres
+      CAMPAIGN_DB_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-markopolo123}
+      REDIS_DB: 3
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      - postgres-campaigns
+      - redis
+      - kafka
+    networks:
+      - markopolo-network
+
+  chat-service:
+    build:
+      context: ./microservices/chat-service
+      dockerfile: Dockerfile
+    hostname: chat-service
+    container_name: chat-service
+    ports:
+      - "3004:3004"
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      CHAT_DB_HOST: postgres-chat
+      CHAT_DB_PORT: 5432
+      CHAT_DB_NAME: markopolo_chat
+      CHAT_DB_USER: postgres
+      CHAT_DB_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-markopolo123}
+      REDIS_DB: 4
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      - postgres-chat
+      - redis
+      - kafka
+    networks:
+      - markopolo-network
+
+  ai-service:
+    build:
+      context: ./microservices/ai-service
+      dockerfile: Dockerfile
+    hostname: ai-service
+    container_name: ai-service
+    ports:
+      - "3005:3005"
+    environment:
+      NODE_ENV: development
+      PORT: 3005
+      AI_DB_HOST: postgres-ai
+      AI_DB_PORT: 5432
+      AI_DB_NAME: markopolo_ai
+      AI_DB_USER: postgres
+      AI_DB_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-markopolo123}
+      REDIS_DB: 5
+      KAFKA_BROKERS: kafka:29092
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      - postgres-ai
+      - redis
+      - kafka
+    networks:
+      - markopolo-network
+
+  notification-service:
+    build:
+      context: ./microservices/notification-service
+      dockerfile: Dockerfile
+    hostname: notification-service
+    container_name: notification-service
+    ports:
+      - "3006:3006"
+    environment:
+      NODE_ENV: development
+      PORT: 3006
+      NOTIFICATION_DB_HOST: postgres-notifications
+      NOTIFICATION_DB_PORT: 5432
+      NOTIFICATION_DB_NAME: markopolo_notifications
+      NOTIFICATION_DB_USER: postgres
+      NOTIFICATION_DB_PASSWORD: ${POSTGRES_PASSWORD:-markopolo123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-markopolo123}
+      REDIS_DB: 6
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      - postgres-notifications
+      - redis
+      - kafka
+    networks:
+      - markopolo-network
+
+  analytics-service:
+    build:
+      context: ./microservices/analytics-service
+      dockerfile: Dockerfile
+    hostname: analytics-service
+    container_name: analytics-service
+    ports:
+      - "3007:3007"
+    environment:
+      NODE_ENV: development
+      PORT: 3007
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 9000
+      CLICKHOUSE_DB: markopolo_analytics
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-markopolo123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-markopolo123}
+      REDIS_DB: 7
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      - clickhouse
+      - redis
+      - kafka
+    networks:
+      - markopolo-network
+
+  file-service:
+    build:
+      context: ./microservices/file-service
+      dockerfile: Dockerfile
+    hostname: file-service
+    container_name: file-service
+    ports:
+      - "3008:3008"
+    environment:
+      NODE_ENV: development
+      PORT: 3008
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_USE_SSL: false
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-markopolo123}
+      REDIS_DB: 8
+      KAFKA_BROKERS: kafka:29092
+    depends_on:
+      - minio
+      - redis
+      - kafka
+    networks:
+      - markopolo-network
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    hostname: prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - markopolo-network
+
+  grafana:
+    image: grafana/grafana:latest
+    hostname: grafana
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin123}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./infrastructure/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - markopolo-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    hostname: jaeger
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    networks:
+      - markopolo-network
+
+volumes:
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-data:
+  redis-data:
+  postgres-auth-data:
+  postgres-users-data:
+  postgres-campaigns-data:
+  postgres-chat-data:
+  postgres-ai-data:
+  postgres-notifications-data:
+  clickhouse-data:
+  minio-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  markopolo-network:
+    driver: bridge

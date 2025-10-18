@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: markopolo-config
+  namespace: markopolo-ai
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  JWT_EXPIRES_IN: "24h"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  KAFKA_BROKERS: "kafka-service:9092"
+  
+  # Service URLs
+  AUTH_SERVICE_URL: "http://auth-service:3001"
+  USER_SERVICE_URL: "http://user-service:3002"
+  CAMPAIGN_SERVICE_URL: "http://campaign-service:3003"
+  CHAT_SERVICE_URL: "http://chat-service:3004"
+  AI_SERVICE_URL: "http://ai-service:3005"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:3006"
+  ANALYTICS_SERVICE_URL: "http://analytics-service:3007"
+  FILE_SERVICE_URL: "http://file-service:3008"
+  
+  # Database Configuration
+  AUTH_DB_HOST: "postgres-auth-service"
+  AUTH_DB_PORT: "5432"
+  AUTH_DB_NAME: "markopolo_auth"
+  AUTH_DB_USER: "postgres"
+  AUTH_DB_SSL: "true"
+  
+  USER_DB_HOST: "postgres-users-service"
+  USER_DB_PORT: "5432"
+  USER_DB_NAME: "markopolo_users"
+  USER_DB_USER: "postgres"
+  
+  CAMPAIGN_DB_HOST: "postgres-campaigns-service"
+  CAMPAIGN_DB_PORT: "5432"
+  CAMPAIGN_DB_NAME: "markopolo_campaigns"
+  CAMPAIGN_DB_USER: "postgres"
+  
+  CHAT_DB_HOST: "postgres-chat-service"
+  CHAT_DB_PORT: "5432"
+  CHAT_DB_NAME: "markopolo_chat"
+  CHAT_DB_USER: "postgres"
+  
+  AI_DB_HOST: "postgres-ai-service"
+  AI_DB_PORT: "5432"
+  AI_DB_NAME: "markopolo_ai"
+  AI_DB_USER: "postgres"
+  
+  NOTIFICATION_DB_HOST: "postgres-notifications-service"
+  NOTIFICATION_DB_PORT: "5432"
+  NOTIFICATION_DB_NAME: "markopolo_notifications"
+  NOTIFICATION_DB_USER: "postgres"
+  
+  # ClickHouse Configuration
+  CLICKHOUSE_HOST: "clickhouse-service"
+  CLICKHOUSE_PORT: "9000"
+  CLICKHOUSE_DB: "markopolo_analytics"
+  CLICKHOUSE_USER: "default"
+  
+  # MinIO Configuration
+  MINIO_ENDPOINT: "minio-service"
+  MINIO_PORT: "9000"
+  MINIO_USE_SSL: "false"
+  
+  # CORS Configuration
+  ALLOWED_ORIGINS: "https://markopolo.ai,https://www.markopolo.ai"
+  
+  # Rate Limiting
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "1000"
+
+
+
